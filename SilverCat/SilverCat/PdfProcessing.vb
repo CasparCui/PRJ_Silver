@@ -9,7 +9,6 @@ Namespace SilverCat
     Public Class PdfProcessing
         Implements IDisposable
 
-
         ''' <summary>
         ''' シングルトン。
         ''' </summary>
@@ -18,19 +17,74 @@ Namespace SilverCat
         ''' <summary>
         ''' Acrobat Distiller。
         ''' </summary>
-        Private Shared WithEvents pdfDistiller_ As PdfDistiller = New PdfDistiller
-
+        Private Shared WithEvents pdfDistiller_ As PdfDistiller
 
         ''' <summary>
-        ''' Acrobat Distiller の ログ出力。
+        ''' ログ出力。
         ''' </summary>
-        Private Shared distillerLog_ As StringWriter = New StringWriter
+        Private Shared log_ As StringWriter
+
+        ''' <summary>
+        ''' Acrobat Distillerの処理状態を管理するフラグ。
+        ''' </summary>
+        ''' <remarks>
+        ''' Acrobat Distillerのイベント通知で、処理中ステータスの管理に利用。
+        ''' True:処理中。False:アイドル。
+        ''' </remarks>
+        Private bWorking_ As Boolean
 
         ''' <summary>
         ''' コンストラクタ(不可視)。
         ''' </summary>
         Private Sub New()
+            log_ = New StringWriter
 
+            pdfDistiller_ = New PdfDistiller
+
+            '' Acrobat Distillerのイベントハンドラの設定
+            '' PDFが作成されたイベント
+            AddHandler pdfDistiller_.OnJobDone, _
+                Sub(input As String, output As String)
+                    log_.WriteLine(">>Created the PDF[" & output & "].")
+                End Sub
+
+            '' ジョブが失敗したイベント
+            AddHandler pdfDistiller_.OnJobFail, _
+                Sub(input As String, output As String)
+                    log_.WriteLine(">>Failed to create the PDF(" & output & ").")
+                End Sub
+
+            '' PDF作成中イベント
+            AddHandler pdfDistiller_.OnPercentDone, _
+                Sub(percentDone As Integer)
+                    If percentDone > 0 Then
+                        Me.bWorking_ = True
+                    End If
+                    If Me.bWorking_ Then
+                        If percentDone = 0 Then
+                            log_.WriteLine("Idle:")
+                            Me.bWorking_ = False
+                        Else
+                            log_.WriteLine(percentDone & "% processing...")
+                        End If
+                    End If
+                End Sub
+
+            '' PDFページ番号イベント
+            AddHandler pdfDistiller_.OnPageNumber, _
+                Sub(pageNum As Integer)
+                    log_.WriteLine("be creating (" & pageNum & ") page...")
+                End Sub
+
+            '' True:Acrobat Distillerは画面表示する。
+            '' False:Acrobat Distillerは画面表示しない。
+            pdfDistiller_.bShowWindow = False
+
+            '' False:FileToPDFはすぐにPDFジョブを処理し、 PDFファイルが作成されるまで戻りません。
+            '' True:FileToPDFはDistillerの内部ジョブキューにPDFジョブを送信し、すぐに戻ります。
+            '' ジョブは、いくつかの後の時点で処理されます。ジョブが完了したときを知るためには、
+            '' Distillerのジョブの処理中に実行されるイベントで確認できます。
+            pdfDistiller_.bSpoolJobs = False
         End Sub
 
         ''' <summary>
@@ -41,82 +95,54 @@ Namespace SilverCat
         End Function
 
         ''' <summary>
-        ''' Acrobat Distillerの処理状態を管理するフラグ。
+        ''' PostScriptファイルからPDFファイルを作成します。
         ''' </summary>
+        ''' <param name="inPS"></param>
+        ''' <param name="outPDF"></param>
+        ''' <param name="jobOptionFilePath"></param>
+        ''' <returns>
+        ''' String(0):PDFファイルのフルパス。
+        ''' String(1):Acrobat Distiller ログメッセージ文字列。
+        ''' </returns>
         ''' <remarks>
-        ''' Acrobat Distillerのイベント通知で、処理中ステータスの管理に利用。
-        ''' TRUE:処理中。FALSE:アイドル。
+        ''' 参考URL：
+        ''' http://help.adobe.com/livedocs/acrobat_sdk/9.1/Acrobat9_1_HTMLHelp
         ''' </remarks>
-        Private bWorking_ As Boolean
-
-        ''' <summary>
-        ''' PostScriptファイルからPdfを作成します。
-        ''' </summary>
         Public Function CreatePdf(ByRef inPS As String, _
                              ByRef outPDF As String, _
-                             ByRef inOptionFilePath As String) As String()
+                             ByRef jobOptionFilePath As String) As String()
 
-            Dim result() As String
+            Dim result() As String = New String() {Nothing, Nothing}
             Try
-                result = New String() {Nothing, Nothing}
+                log_.Write(">>Input PostScript file is (")
+                log_.Write(inPS)
+                log_.WriteLine(").")
 
-                distillerLog_.Write(">>Input PostScript file is (")
-                distillerLog_.Write(inPS)
-                distillerLog_.WriteLine(").")
-
-                AddHandler pdfDistiller_.OnJobDone, _
-                    Sub(input As String, output As String)
-                        distillerLog_.WriteLine(">>created the PDF(" & output & ").")
-                    End Sub
-                AddHandler pdfDistiller_.OnJobFail, _
-                    Sub(input As String, output As String)
-                        distillerLog_.WriteLine(">>failed to create the PDF(" & output & ").")
-                    End Sub
-                AddHandler pdfDistiller_.OnPercentDone, _
-                    Sub(percentDone As Integer)
-                        If percentDone > 0 Then
-                            Me.bWorking_ = True
-                        End If
-                        If Me.bWorking_ Then
-                            If percentDone = 0 Then
-                                distillerLog_.WriteLine("Idle:")
-                                Me.bWorking_ = False
-                            Else
-                                distillerLog_.WriteLine(percentDone & "% processing...")
-                            End If
-                        End If
-                    End Sub
-                AddHandler pdfDistiller_.OnPageNumber, _
-                    Sub(pageNum As Integer)
-                        distillerLog_.WriteLine("be creating (" & pageNum & ") page...")
-                    End Sub
-
-                pdfDistiller_.bShowWindow = False
-                pdfDistiller_.bSpoolJobs = False
+                '' PDF作成中イベントハンドラ用に処理中フラグをFalseにして、
+                '' まずは処理は止まっていることにする。
                 Me.bWorking_ = False
 
+                '' PDFファイルをファイル
                 Dim rc As Integer
-
-                rc = pdfDistiller_.FileToPDF(inPS, outPDF, inOptionFilePath)
-
-                Select rc
+                rc = pdfDistiller_.FileToPDF(inPS, outPDF, jobOptionFilePath)
+                Select Case rc
                     Case -1
-                        distillerLog_.WriteLine("PdfDistiller.bSpoolJobsフラグの設定に問題があります。")
-                        Throw New ArgumentException(distillerLog_.ToString())
+                        log_.WriteLine("An exception occurred in the [PdfDistiller.bSpoolJobs].")
+                        Throw New ArgumentException(log_.ToString())
                     Case 0
-                        distillerLog_.WriteLine("PdfDistiller.FileToPDF()メソッドの引数に問題があります。")
-                        Throw New ArgumentException(distillerLog_.ToString())
+                        log_.WriteLine("An exception occurred in the [PdfDistiller.FileToPDF()] method. Please check the argument.")
+                        Throw New ArgumentException(log_.ToString())
                     Case 1
                         '' OK
-                        distillerLog_.WriteLine("出力PDFファイル(" + outPDF + ")としてPDFファイルの作成に成功しました。")
+                        log_.WriteLine("Successful in the creation of [" + outPDF + "] pdf file.")
                     Case Else
-                        distillerLog_.WriteLine("PdfDistiller.FileToPDF()メソッドの実行に失敗しました。")
-                        Throw New Exception(distillerLog_.ToString())
+                        log_.WriteLine("It failed to execute [PdfDistiller.FileToPDF()] method.")
+                        Throw New Exception(log_.ToString())
                 End Select
 
 
                 result(0) = outPDF
-                result(1) = distillerLog_.ToString()
+                result(1) = log_.ToString()
             Finally
             End Try
             Return result
@@ -126,7 +152,7 @@ Namespace SilverCat
         ''' リソース解放
         ''' </summary>
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
-            Console.Error.WriteLine(">PdfProcessing:終了処理。")
+            Console.Error.WriteLine(">PdfProcessing:Resources of the release.")
             If Not (pdfDistiller_ Is Nothing) Then
                 Marshal.ReleaseComObject(pdfDistiller_)
                 pdfDistiller_ = Nothing
