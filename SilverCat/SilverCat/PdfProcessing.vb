@@ -97,9 +97,9 @@ Namespace SilverCat
         ''' <summary>
         ''' PostScriptファイルからPDFファイルを作成します。
         ''' </summary>
-        ''' <param name="inPS"></param>
-        ''' <param name="outPDF"></param>
-        ''' <param name="jobOptionFilePath"></param>
+        ''' <param name="inPS">入力PostScriptファイルパス</param>
+        ''' <param name="outPDF">出力PDFファイルパス</param>
+        ''' <param name="jobOptionFilePath">Acrobat Distiller ジョブオプションファイルパス。</param>
         ''' <returns>
         ''' String(0):PDFファイルのフルパス。
         ''' String(1):Acrobat Distiller ログメッセージ文字列。
