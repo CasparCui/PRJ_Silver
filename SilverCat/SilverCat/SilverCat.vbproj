@@ -106,6 +106,8 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <None Include="resource\AcrobatProセキュティポリシーの設定方.docx" />
+    <None Include="resource\AcrobatProセキュティポリシーの設定方.pdf" />
     <None Include="resource\CertExchangeHanako.cer" />
     <None Include="resource\CertExchangeTaro.cer" />
     <None Include="resource\Hanako.pfx" />
