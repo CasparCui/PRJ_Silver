@@ -1,8 +1,8 @@
 ¡©ŒÈ–¼Ø–¾‘‚Ìì¬
-$ openssl req -new -x509 -out my_cert.pem -keyout my_private_key.pem
+$ openssl req -new -x509 -out my_cert.pem -keyout my_private_key.pem -days 365
 Generating a 2048 bit RSA private key
-................+++
-....................................+++
+................................................+++
+...............+++
 writing new private key to 'my_private_key.pem'
 Enter PEM pass phrase:
 Verifying - Enter PEM pass phrase:

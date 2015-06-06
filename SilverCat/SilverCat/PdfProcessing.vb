@@ -161,10 +161,7 @@ Namespace SilverCat
         ''' </summary>
         ''' <paramref name="inPdfFilePath">入力PDFファイルへのフルパス。</paramref>
         ''' <paramref name="outPdfFilePath">出力PDFファイルへのフルパス。</paramref>
-        ''' <paramref name="digitalIdPassword">電子証明書のパスワード。</paramref>
-        ''' <paramref name="digitalIdFilePath">電子証明書ファイルへのフルパス。</paramref>
-        ''' <paramref name="policyName">セキュリティポリシー名。</paramref>
-        ''' <paramref name="rect">電子署名フィールドの矩形座標。</paramref>
+        ''' <paramref name="jsonSignParam">電子署名Javascriptに渡す引数。JSON形式のString。</paramref>
         ''' JavaScriptで電子署名をするので、電子証明書ファイルパスはjavascriptで解釈できるファイルパスの区切り文字"/"のこと。</param>
         ''' <remarks>
         ''' http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.pdf
@@ -176,10 +173,7 @@ Namespace SilverCat
         ''' </returns>
         Public Function SignPdf(ByVal inPdfFilePath As String, _
                                 ByVal outPdfFilePath As String, _
-                                ByVal digitalIdPassword As String, _
-                                ByVal digitalIdFilePath As String, _
-                                ByVal policyName As String, _
-                                ByVal rect() As Integer) As String()
+                                ByVal jsonSignParam As String) As String()
 
             Dim inPdDoc As AcroPDDoc = Nothing
             Dim inAvDoc As AcroAVDoc = Nothing
@@ -219,21 +213,9 @@ Namespace SilverCat
 
 
                 Dim jsCode As New StringWriter
-                jsCode.Write("SignPdf(this, '")
-                jsCode.Write(digitalIdPassword)
-                jsCode.Write("','")
-                jsCode.Write(digitalIdFilePath)
-                jsCode.Write("','")
-                jsCode.Write(policyName)
-                jsCode.Write("','")
-                jsCode.Write(rect(0))
-                jsCode.Write("','")
-                jsCode.Write(rect(1))
-                jsCode.Write("','")
-                jsCode.Write(rect(2))
-                jsCode.Write("','")
-                jsCode.Write(rect(3))
-                jsCode.Write("');")
+                jsCode.Write("SignPdf(this, ")
+                jsCode.Write(jsonSignParam)
+                jsCode.Write(");")
 
                 Dim jsRc As String = fields.ExecuteThisJavascript(jsCode.ToString())
 

@@ -7,19 +7,13 @@ SilverCat.sigField_cFieldType = "signature";
 /**
 * PDFファイルに電子署名します。
 * @param doc 電子署名対象のPDFドキュメント。
-* @param pwd 電子証明書パスワード。
-* @param did 電子証明書ファイルのフルパス。パス区切り文字は"/"。
-* @param policy セキュリティポリシー名。
-* @param x 電子署名フィールド配置位置左上x座標。
-* @param y 電子署名フィールド配置位置左上y座標。
-* @param width 電子署名フィールド幅。
-* @param height 電子署名フィールド高さ。
+* @param jsonSignParam 電子署名パラメータ。
 */
-function SignPdf(doc, pwd, did, policy, x, y, width, height) {
+function SignPdf(doc, jsonSignParam) {
   try {
-    var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, x, y, width, height);
+    var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSignParam);
     if(field) {
-      EmbedSignToPdf(doc, field, pwd, did, policy);
+      EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName);
     }
     event.value = "0";
   } catch(e) {
@@ -33,9 +27,10 @@ function SignPdf(doc, pwd, did, policy, x, y, width, height) {
 * @param doc 電子署名対象のPDFドキュメント。
 * @param cName 電子署名フィールド名。
 * @param cFieldType フィールドタイプ。電子署名を打つので、"signature"。
+* @param jsonSignParam 電子署名パラメータ。
 * @return 電子署名フィールド。
 */
-function AddSignatureField(doc, cName, cFieldType, x, y, width, height) {
+function AddSignatureField(doc, cName, cFieldType, jsonSignParam) {
   // フィールドの座標定義
   // 左下隅が原点(x,y)の(0,0)
   // A4縦のPDFドキュメントのPageBoxをgetすると、
@@ -43,10 +38,10 @@ function AddSignatureField(doc, cName, cFieldType, x, y, width, height) {
   // となる。
   var rectangle = doc.getPageBox( {nPage: 0} );
   
-  rectangle[0] = x; // 左上x座標。プラスで右に行く。
-  rectangle[1] -= y; // 左上y座標。マイナスで下に行く。
-  rectangle[2] = rectangle[0] + width; // 幅。プラスで右に行く。
-  rectangle[3] = rectangle[1] - height; // 高。マイナスで下に行く。
+  rectangle[0] = jsonSignParam.x; // 左上x座標。プラスで右に行く。
+  rectangle[1] -= jsonSignParam.y; // 左上y座標。マイナスで下に行く。
+  rectangle[2] = rectangle[0] + jsonSignParam.width; // 幅。プラスで右に行く。
+  rectangle[3] = rectangle[1] - jsonSignParam.height; // 高。マイナスで下に行く。
 
   var field = null;
   try {
@@ -80,7 +75,11 @@ EmbedSignToPdf = app.trustedFunction (
 
       var sh = security.getHandler(security.PPKLiteHandler, false);
       sh.login(pwd, did);
-
+      // この電子証明書にログインするパスワードのタイムアウトはデフォルト、ゼロ秒。
+      // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
+      // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
+      sh.setPasswordTimeout(pwd, 30); 
+      
       // 公開鍵によるセキュリティ設定:
       // PDFファイル受信者の公開鍵で暗号化する。
       // PDFファイルを開くには上記公開鍵のペアである秘密鍵でないと開けない。
