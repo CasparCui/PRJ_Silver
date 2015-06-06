@@ -202,7 +202,7 @@ Namespace SilverCat
 
                 inAvDoc = CType(inPdDoc.OpenAVDoc("TEMP_PDF_DOCUMENT"), AcroAVDoc)
 
-                '' 電子署名自体はJavascriptで行うので、ここではJavascriptを呼び出すイメージ。
+                '' 電子署名自体はJavascriptで行うので、ここではJavascriptを呼び出すイメージ。D:\Users\lemac\Source\Repos\PRJ_Silver\SilverCat\SilverCat\resource\SignPdf.js
                 formApp = New AFormApp()
 
                 fields = CType(formApp.Fields, Fields)
@@ -213,7 +213,7 @@ Namespace SilverCat
 
 
                 Dim jsCode As New StringWriter
-                jsCode.Write("SignPdf(this, ")
+                jsCode.Write("SignToPdf(this, ")
                 jsCode.Write(jsonSignParam)
                 jsCode.Write(");")
 
@@ -302,7 +302,3 @@ Namespace SilverCat
 
 
 End Namespace
-
-
-
-

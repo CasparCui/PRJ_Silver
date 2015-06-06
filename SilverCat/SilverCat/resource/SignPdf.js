@@ -9,11 +9,15 @@ SilverCat.sigField_cFieldType = "signature";
 * @param doc 電子署名対象のPDFドキュメント。
 * @param jsonSignParam 電子署名パラメータ。
 */
-function SignPdf(doc, jsonSignParam) {
+function SignToPdf(doc, jsonSignParam) {
   try {
     var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSignParam);
     if(field) {
-      EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName);
+      if(jsonSignParam.recipientPublicCerts == null) {
+        EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName);
+      } else {
+        EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName, jsonSignParam.recipientPublicCerts);
+      }
     }
     event.value = "0";
   } catch(e) {
@@ -21,6 +25,7 @@ function SignPdf(doc, jsonSignParam) {
     console.println(e);
   }
 }
+
 
 /**
 * PDFドキュメントに電子署名フィールドを追加します。
@@ -79,20 +84,6 @@ EmbedSignToPdf = app.trustedFunction (
       // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
       // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
       sh.setPasswordTimeout(pwd, 30); 
-      
-      // 公開鍵によるセキュリティ設定:
-      // PDFファイル受信者の公開鍵で暗号化する。
-      // PDFファイルを開くには上記公開鍵のペアである秘密鍵でないと開けない。
-/*
-      // 受信者の公開鍵証明書の取り込み(X509.3)
-      var tarou = security.importFromFile("Certificate", "C:/temp/pub_tarou.cer" );
-      var hanako = security.importFromFile("Certificate", "C:/temp/pub_hanako.cer" );
-      // 受信者グループ毎にアクセス権限を設定
-      var group1 = { userEntities: [ {certificates: [tarou] } ], permissions: {allowAll: true} };
-      var group2 = { userEntities: [ {certificates: [hanako] } ], permissions: {allowChanges: "fillAndSign"} };
-      // 受信者の公開鍵で暗号化
-      doc.encryptForRecipients({ oGroups: [group1, group2] , bMetaData: true } );
-*/
 
       // セキュティポリシーによるセキュリティ設定：
       // Acrobat Pro XIの場合：
@@ -133,3 +124,64 @@ EmbedSignToPdf = app.trustedFunction (
     }
   }
 );
+
+
+/**
+* 電子署名フィールドに電子署名を埋め込みます。
+* @param sigField 電子署名フィールド。
+* @param pwd 電子証明書パスワード。
+* @param did 電子証明書ファイルのフルパス。
+* @param policy セキュリティポリシー名。
+* @param recipientPublicCertFilePathArray 受信者の公開鍵証明書ファイルフルパスの配列。
+*/
+EmbedSignToPdf = app.trustedFunction (
+  function(doc, sigField, pwd, did, policy, recipientPublicCertFilePathArray) {
+    try {
+      app.beginPriv();
+
+      var sh = security.getHandler(security.PPKLiteHandler, false);
+      sh.login(pwd, did);
+      // この電子証明書にログインするパスワードのタイムアウトはデフォルト、ゼロ秒。
+      // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
+      // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
+      sh.setPasswordTimeout(pwd, 30); 
+
+      // 公開鍵によるセキュリティ設定:
+      // PDFファイル受信者の公開鍵で暗号化する。
+      // PDFファイルを開くには上記公開鍵のペアである秘密鍵でないと開けない。
+      // 受信者はAdobe ReaderかAdobe Proに自分の電子証明書を登録して、開くことになる。
+/*
+      // 受信者の公開鍵証明書の取り込み(X509.3)
+      var tarou = security.importFromFile("Certificate", "C:/temp/pub_tarou.cer" );
+      var hanako = security.importFromFile("Certificate", "C:/temp/pub_hanako.cer" );
+      // 受信者グループ毎にアクセス権限を設定
+      var group1 = { userEntities: [ {certificates: [tarou] } ], permissions: {allowAll: true} };
+      var group2 = { userEntities: [ {certificates: [hanako] } ], permissions: {allowChanges: "fillAndSign"} };
+      // 受信者の公開鍵で暗号化
+      doc.encryptForRecipients({ oGroups: [group1, group2] , bMetaData: true } );
+*/
+      var recipients = new Array();
+      for each (var certPath in recipientPublicCertFilePathArray) {
+        var cert = security.importFromFile("Certificate", certPath);
+        recipients.push({certificates:[cert]});
+      }
+
+      var group = { userEntities: recipients, permissions: {allowAll: true} };
+      doc.encryptForRecipients({ oGroups: group, bMetaData: true, bUI: false } );
+
+      // 電子署名情報の設定。
+      // mdp:"allowAll":普通署名。
+      //     "allowNone","default","defaultAndComments":MDP署名。
+      var sigInfo = {
+        mdp: "allowNone"
+      };
+      // 電子署名をする。
+      sigField.signatureSign({oSig: sh, oInfo: sigInfo, bUI: false});
+
+      app.endPriv();
+    } catch (e) {
+      throw e;
+    }
+  }
+);
+
