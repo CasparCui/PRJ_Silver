@@ -106,8 +106,14 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <None Include="resource\CertExchangeHanako.cer" />
+    <None Include="resource\CertExchangeTaro.cer" />
+    <None Include="resource\Hanako.pfx" />
+    <None Include="resource\my_cert.pem" />
     <None Include="resource\my_private_key.p12" />
+    <None Include="resource\my_private_key.pem" />
     <None Include="resource\SilverCat.joboptions" />
+    <None Include="resource\Taro.pfx" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Acrobat">
