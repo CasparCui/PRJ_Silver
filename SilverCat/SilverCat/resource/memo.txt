@@ -27,3 +27,7 @@ $ openssl pkcs12 -export -inkey my_private_key.pem -in my_cert.pem -out my_priva
 Enter pass phrase for my_private_key.pem:
 Enter Export Password:
 Verifying - Enter Export Password:
+
+Å°éQçlURL
+http://help.adobe.com/livedocs/acrobat_sdk/9.1/Acrobat9_1_HTMLHelp/wwhelp/wwhimpl/js/html/wwhelp.htm?&accessible=true
+http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.pdf

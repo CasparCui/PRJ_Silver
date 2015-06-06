@@ -164,7 +164,6 @@ Namespace SilverCat
         ''' <paramref name="jsonSignParam">電子署名Javascriptに渡す引数。JSON形式のString。</paramref>
         ''' JavaScriptで電子署名をするので、電子証明書ファイルパスはjavascriptで解釈できるファイルパスの区切り文字"/"のこと。</param>
         ''' <remarks>
-        ''' http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.pdf
         ''' %Acrobatインストールディレクトリ%Acrobat\Javascriptsに、SignPdf.jsを事前に配置のこと。
         ''' </remarks>
         ''' <returns>

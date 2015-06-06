@@ -26,8 +26,6 @@ Namespace SilverCat
                 recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeHanako.cer")
                 recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeTaro.cer")
                 signParam.Add("recipientPublicCerts", recipientPublicCert)
-                ''signParam.Add("recipientPublicCerts", Nothing)
-
                 jsonSignParam = (New JavaScriptSerializer).Serialize(signParam).ToString()
 
                 res = pdfP.CreatePdf(BASE_DIR & "data\sample.ps", _
