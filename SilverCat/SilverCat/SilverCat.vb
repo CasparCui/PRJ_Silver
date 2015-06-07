@@ -22,10 +22,14 @@ Namespace SilverCat
                 signParam.Add("password", "password!")
                 signParam.Add("securityPolicyName", "PASSWORD_ENCRYPT_POLICY")
 
-                Dim recipientPublicCert As ArrayList = New ArrayList
-                recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeHanako.cer")
-                recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeTaro.cer")
-                signParam.Add("recipientPublicCerts", recipientPublicCert)
+                'Dim recipientPublicCert As ArrayList = New ArrayList
+                'recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeHanako.cer")
+                'recipientPublicCert.Add("D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeTaro.cer")
+                'signParam.Add("recipientPublicCerts", recipientPublicCert)
+
+                '' 受信者公開鍵で暗号化せず、セキュリティポリシーで暗号化するので、Nothing
+                signParam.Add("recipientPublicCerts", Nothing)
+
                 jsonSignParam = (New JavaScriptSerializer).Serialize(signParam).ToString()
 
                 res = pdfP.CreatePdf(BASE_DIR & "data\sample.ps", _

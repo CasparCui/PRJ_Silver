@@ -116,6 +116,8 @@
     <None Include="resource\my_private_key.pem" />
     <None Include="resource\SilverCat.joboptions" />
     <None Include="resource\Taro.pfx" />
+    <None Include="resource\watermark.pdf" />
+    <None Include="resource\watermark.ps" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Acrobat">
