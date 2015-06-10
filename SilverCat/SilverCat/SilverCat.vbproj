@@ -149,7 +149,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resource\SignPdf.js" />
+    <Content Include="resource\SetSecurity.js" />
     <Content Include="resource\memo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
