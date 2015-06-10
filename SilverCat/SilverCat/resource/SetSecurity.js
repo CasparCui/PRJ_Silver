@@ -5,27 +5,61 @@ SilverCat.sigField_cName = "SilverCatSignatureField";
 SilverCat.sigField_cFieldType = "signature";
 
 /**
+* PDFファイルにセキュリティを設定します。
+* セキュリティポリシーで設定するか受信者の公開鍵で設定します。
+* @param doc 対象のPDFドキュメント。
+* @param jsonSecurityParam セキュリティ設定パラメータ。
+*/
+SetSecurityToPdf = app.trustedFunction (
+  function(doc, jsonSecurityParam) {
+    try {
+      app.beginPriv();
+      if(jsonSecurityParam.recipientPublicCerts == null) {
+        SetSecurityPolicy(doc, jsonSecurityParam.securityPolicyName);
+      } else {
+        SetSecurityPublicDigitalIds(doc, jsonSecurityParam.recipientPublicCerts);
+      }
+      doc.saveAs({
+        cPath:"c:/temp/a.pdf"
+      });
+      
+      event.value = "0";
+      app.endPriv();
+    } catch(e) {
+      event.value = "Exception:" + e;
+      console.println(e);
+    }
+  }
+);
+
+/**
 * PDFファイルに電子署名します。
+* 電子署名のついでにセキュリティを施します。
 * @param doc 電子署名対象のPDFドキュメント。
 * @param jsonSignParam 電子署名パラメータ。
 */
-function SignToPdf(doc, jsonSignParam) {
-  try {
-    var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSignParam);
-    if(field) {
-      if(jsonSignParam.recipientPublicCerts == null) {
-        EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName);
-      } else {
-        EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath, jsonSignParam.securityPolicyName, jsonSignParam.recipientPublicCerts);
+SignToPdf = app.trustedFunction (
+  function(doc, jsonSignParam) {
+    try {
+      app.beginPriv();
+      var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSignParam);
+      if(field) {
+        if(jsonSignParam.recipientPublicCerts == null) {
+          SetSecurityPolicy(doc, jsonSignParam.securityPolicyName);
+          EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath);
+        } else {
+          SetSecurityPublicDigitalIds(doc, jsonSignParam.recipientPublicCerts);
+          EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath);
+        }
       }
+      event.value = "0";
+      app.endPriv();
+    } catch(e) {
+      event.value = "Exception:" + e;
+      console.println(e);
     }
-    event.value = "0";
-  } catch(e) {
-    event.value = "Exception:" + e;
-    console.println(e);
   }
-}
-
+);
 
 /**
 * PDFドキュメントに電子署名フィールドを追加します。
@@ -35,55 +69,56 @@ function SignToPdf(doc, jsonSignParam) {
 * @param jsonSignParam 電子署名パラメータ。
 * @return 電子署名フィールド。
 */
-function AddSignatureField(doc, cName, cFieldType, jsonSignParam) {
-  // フィールドの座標定義
-  // 左下隅が原点(x,y)の(0,0)
-  // A4縦のPDFドキュメントのPageBoxをgetすると、
-  // rect[0]=0,rect[1]=792,rect[2]=612,rect[3]=0
-  // となる。
-  var rectangle = doc.getPageBox( {nPage: 0} );
-  
-  rectangle[0] = jsonSignParam.x; // 左上x座標。プラスで右に行く。
-  rectangle[1] -= jsonSignParam.y; // 左上y座標。マイナスで下に行く。
-  rectangle[2] = rectangle[0] + jsonSignParam.width; // 幅。プラスで右に行く。
-  rectangle[3] = rectangle[1] - jsonSignParam.height; // 高。マイナスで下に行く。
 
-  var field = null;
-  try {
-    // PDFDocument.addField()
-    // cName:フィールド名。PDFドキュメントの中でダブらなければよいでしょう。
-    // cFieldType:フィールドタイプ。電子署名を打つので、"signature"。
-    // nPageNum:ページ番号はゼロから始まる。ゼロならば、先頭のページに電子署名フィールドを追加。
-    // aRect:電子署名フィールド座標
-    field = doc.addField(cName, cFieldType, 0, rectangle);
-    // 可視とする。
-    field.hidden = false;
-    // 印刷対象外とする。
-    field.print = false;
-  } catch (e) {
-    throw e;
+AddSignatureField = app.trustedFunction (
+  function(doc, cName, cFieldType, jsonSignParam) {
+    var field = null;
+    try {
+      app.beginPriv();
+
+      // フィールドの座標定義
+      // 左下隅が原点(x,y)の(0,0)
+      // A4縦のPDFドキュメントのPageBoxをgetすると、
+      // rect[0]=0,rect[1]=792,rect[2]=612,rect[3]=0
+      // となる。
+      var rectangle = doc.getPageBox( {nPage: 0} );
+
+      rectangle[0] = jsonSignParam.x; // 左上x座標。プラスで右に行く。
+      rectangle[1] -= jsonSignParam.y; // 左上y座標。マイナスで下に行く。
+      rectangle[2] = rectangle[0] + jsonSignParam.width; // 幅。プラスで右に行く。
+      rectangle[3] = rectangle[1] - jsonSignParam.height; // 高。マイナスで下に行く。
+
+      // PDFDocument.addField()
+      // cName:フィールド名。PDFドキュメントの中でダブらなければよいでしょう。
+      // cFieldType:フィールドタイプ。電子署名を打つので、"signature"。
+      // nPageNum:ページ番号はゼロから始まる。ゼロならば、先頭のページに電子署名フィールドを追加。
+      // aRect:電子署名フィールド座標
+      field = doc.addField(cName, cFieldType, 0, rectangle);
+
+      // 可視とする。
+      field.hidden = false;
+
+      // 印刷対象外とする。
+      field.print = false;
+
+      app.endPriv();
+    } catch (e) {
+      throw e;
+    }
+    return field;
   }
-  return field;
-}
+);
 
 /**
-* 電子署名フィールドに電子署名を埋め込みます。
-* @param sigField 電子署名フィールド。
-* @param pwd 電子証明書パスワード。
-* @param did 電子証明書ファイルのフルパス。
+* セキュリティポリシーを設定します。
 * @param policy セキュリティポリシー名。
 */
-EmbedSignToPdf = app.trustedFunction (
-  function(doc, sigField, pwd, did, policy) {
+SetSecurityPolicy = app.trustedFunction (
+  function(doc, policy) {
     try {
       app.beginPriv();
 
       var sh = security.getHandler(security.PPKLiteHandler, false);
-      sh.login(pwd, did);
-      // この電子証明書にログインするパスワードのタイムアウトはデフォルト、ゼロ秒。
-      // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
-      // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
-      sh.setPasswordTimeout(pwd, 30); 
 
       // セキュティポリシーによるセキュリティ設定：
       // Acrobat Pro XIの場合：
@@ -108,16 +143,6 @@ EmbedSignToPdf = app.trustedFunction (
       if( res.errorCode != 0 ) {
         throw res.errorText;
       }
-
-      // 電子署名情報の設定。
-      // mdp:"allowAll":普通署名。
-      //     "allowNone","default","defaultAndComments":MDP署名。
-      var sigInfo = {
-        mdp: "allowNone"
-      };
-      // 電子署名をする。
-      sigField.signatureSign({oSig: sh, oInfo: sigInfo, bUI: false});
-
       app.endPriv();
     } catch (e) {
       throw e;
@@ -125,26 +150,16 @@ EmbedSignToPdf = app.trustedFunction (
   }
 );
 
-
 /**
-* 電子署名フィールドに電子署名を埋め込みます。
-* @param sigField 電子署名フィールド。
-* @param pwd 電子証明書パスワード。
-* @param did 電子証明書ファイルのフルパス。
-* @param policy セキュリティポリシー名。
-* @param recipientPublicCertFilePathArray 受信者の公開鍵証明書ファイルフルパスの配列。
+* 受信者の公開鍵でセキュリティを設定します。
+* @param recipientPublicCertFilePathArray 受信者の公開鍵の配列。
 */
-EmbedSignToPdf = app.trustedFunction (
-  function(doc, sigField, pwd, did, policy, recipientPublicCertFilePathArray) {
+SetSecurityPublicDigitalIds = app.trustedFunction (
+  function(doc, recipientPublicCertFilePathArray) {
     try {
       app.beginPriv();
 
       var sh = security.getHandler(security.PPKLiteHandler, false);
-      sh.login(pwd, did);
-      // この電子証明書にログインするパスワードのタイムアウトはデフォルト、ゼロ秒。
-      // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
-      // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
-      sh.setPasswordTimeout(pwd, 30); 
 
       // 公開鍵によるセキュリティ設定:
       // PDFファイル受信者の公開鍵で暗号化する。
@@ -169,6 +184,31 @@ EmbedSignToPdf = app.trustedFunction (
       var group = { userEntities: recipients, permissions: {allowAll: true} };
       doc.encryptForRecipients({ oGroups: group, bMetaData: true, bUI: false } );
 
+      app.endPriv();
+    } catch (e) {
+      throw e;
+    }
+  }
+);
+
+/**
+* 電子署名フィールドに電子署名を埋め込みます。
+* @param sigField 電子署名フィールド。
+* @param pwd 電子証明書パスワード。
+* @param did 電子証明書ファイルのフルパス。
+*/
+EmbedSignToPdf = app.trustedFunction (
+  function(doc, sigField, pwd, did) {
+    try {
+      app.beginPriv();
+
+      var sh = security.getHandler(security.PPKLiteHandler, false);
+      sh.login(pwd, did);
+      // この電子証明書にログインするパスワードのタイムアウトはデフォルト、ゼロ秒。
+      // デフォルト値のままだと、電子署名したかのように見えて、実は空振りするようなので、
+      // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
+      sh.setPasswordTimeout(pwd, 30); 
+
       // 電子署名情報の設定。
       // mdp:"allowAll":普通署名。
       //     "allowNone","default","defaultAndComments":MDP署名。
@@ -184,4 +224,3 @@ EmbedSignToPdf = app.trustedFunction (
     }
   }
 );
-
