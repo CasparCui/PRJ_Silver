@@ -161,10 +161,9 @@ Namespace SilverCat
         ''' </summary>
         ''' <paramref name="inPdfFilePath">入力PDFファイルへのフルパス。</paramref>
         ''' <paramref name="outPdfFilePath">出力PDFファイルへのフルパス。</paramref>
-        ''' <paramref name="jsonSignParam">電子署名Javascriptに渡す引数。JSON形式のString。</paramref>
-        ''' JavaScriptで電子署名をするので、電子証明書ファイルパスはjavascriptで解釈できるファイルパスの区切り文字"/"のこと。</param>
+        ''' <paramref name="jsonSecurityParam">セキュリティ設定Javascriptに渡す引数。JSON形式のString。</paramref>
         ''' <remarks>
-        ''' %Acrobatインストールディレクトリ%Acrobat\Javascriptsに、SignPdf.jsを事前に配置のこと。
+        ''' %Acrobatインストールディレクトリ%Acrobat\Javascriptsに、SetSecurity.jsを事前に配置のこと。
         ''' </remarks>
         ''' <returns>
         ''' String(0):出力PDFファイルのフルパス。
@@ -172,7 +171,7 @@ Namespace SilverCat
         ''' </returns>
         Public Function SignPdf(ByVal inPdfFilePath As String, _
                                 ByVal outPdfFilePath As String, _
-                                ByVal jsonSignParam As String) As String()
+                                ByVal jsonSecurityParam As String) As String()
 
             Dim inPdDoc As AcroPDDoc = Nothing
             Dim inAvDoc As AcroAVDoc = Nothing
@@ -186,22 +185,19 @@ Namespace SilverCat
                 log_.Write(inPdfFilePath)
                 log_.WriteLine(")")
 
-
-
                 '' 電子署名する前の入力PDFファイルのまま残しておきたいので、コピーする。
                 File.Copy(inPdfFilePath, outPdfFilePath, True)
 
                 inPdDoc = New AcroPDDoc()
-
                 rc = inPdDoc.Open(outPdfFilePath)
-
                 If Not (rc) Then
-                    Throw New IOException(">>It failed to open, for sign file(" & outPdfFilePath & ") ")
+                    Throw New IOException(">>It failed to open, for file(" & outPdfFilePath & ") ")
                 End If
 
+                '' Acrobat Proを立ち上げて、その中にPDFファイルを開く
                 inAvDoc = CType(inPdDoc.OpenAVDoc("TEMP_PDF_DOCUMENT"), AcroAVDoc)
 
-                '' 電子署名自体はJavascriptで行うので、ここではJavascriptを呼び出すイメージ。D:\Users\lemac\Source\Repos\PRJ_Silver\SilverCat\SilverCat\resource\SignPdf.js
+                '' 電子署名自体はJavascriptで行うので、ここではJavascriptを呼び出すイメージ。
                 formApp = New AFormApp()
 
                 fields = CType(formApp.Fields, Fields)
@@ -213,7 +209,7 @@ Namespace SilverCat
 
                 Dim jsCode As New StringWriter
                 jsCode.Write("SignToPdf(this, ")
-                jsCode.Write(jsonSignParam)
+                jsCode.Write(jsonSecurityParam)
                 jsCode.Write(");")
 
                 Dim jsRc As String = fields.ExecuteThisJavascript(jsCode.ToString())
@@ -228,7 +224,10 @@ Namespace SilverCat
                 '' 正の数:PDFドキュメントを保存しないで閉じます。 
                 '' 0でPDFドキュメントが変更されていた:保存するかどうか確認するダイアログを表示
                 '' 負の数:確認なしにPDFドキュメントを保存。
-                rc = inAvDoc.Close(-1)
+
+                '' javascriptの中で電子署名した時点でPDFファイルの保存をするので、ここでは保存せずに閉じます。
+                '' というか、javascriptの外側では保存できないので、こうせざるを得ない。
+                rc = inAvDoc.Close(1)
 
                 If rc Then
                     log_.WriteLine(">>digital sign pdf document to save (" & outPdfFilePath & ").")
@@ -271,6 +270,119 @@ Namespace SilverCat
         End Function
 #End Region
 
+#Region "PDFファイルにセキュリティを設定します。"
+        ''' <summary>
+        ''' PDFファイルにセキュリティを設定します。
+        ''' </summary>
+        ''' <paramref name="inPdfFilePath">入力PDFファイルへのフルパス。</paramref>
+        ''' <paramref name="outPdfFilePath">出力PDFファイルへのフルパス。</paramref>
+        ''' <paramref name="jsonSecurityParam">セキュリティ設定Javascriptに渡す引数。JSON形式のString。</paramref>
+        ''' <remarks>
+        ''' %Acrobatインストールディレクトリ%Acrobat\Javascriptsに、SetSecurity.jsを事前に配置のこと。
+        ''' </remarks>
+        ''' <returns>
+        ''' String(0):出力PDFファイルのフルパス。
+        ''' String(1):ログメッセージ文字列。
+        ''' </returns>
+        Public Function SetSecurityPdf(ByVal inPdfFilePath As String, _
+                                ByVal outPdfFilePath As String, _
+                                ByVal jsonSecurityParam As String) As String()
+
+            Dim inPdDoc As AcroPDDoc = Nothing
+            Dim inAvDoc As AcroAVDoc = Nothing
+            Dim formApp As AFormApp = Nothing
+            Dim fields As Fields = Nothing
+            Dim rc As Boolean = False
+
+            Dim result() As String = New String() {Nothing, Nothing}
+            Try
+                log_.Write(">>Input Pdf file is (")
+                log_.Write(inPdfFilePath)
+                log_.WriteLine(")")
+
+                inPdDoc = New AcroPDDoc()
+                rc = inPdDoc.Open(inPdfFilePath)
+                If Not (rc) Then
+                    Throw New IOException(">>It failed to open, for file(" & inPdfFilePath & ") ")
+                End If
+
+                '' Acrobat Proを立ち上げて、その中にPDFファイルを開く
+                inAvDoc = CType(inPdDoc.OpenAVDoc("TEMP_PDF_DOCUMENT"), AcroAVDoc)
+
+                '' セキュリティ設定はJavascriptで行うので、ここではJavascriptを呼び出すイメージ。
+                formApp = New AFormApp()
+
+                fields = CType(formApp.Fields, Fields)
+
+                Dim nVersion As String
+                nVersion = fields.ExecuteThisJavascript("event.value = app.viewerVersion;")
+                log_.WriteLine("The Acrobat viewer version is " & nVersion & ".")
+
+
+                Dim jsCode As New StringWriter
+                jsCode.Write("SetSecurityToPdf(this, ")
+                jsCode.Write(jsonSecurityParam)
+                jsCode.Write(",'")
+                jsCode.Write(outPdfFilePath)
+                jsCode.Write("');")
+
+                Dim jsRc As String = fields.ExecuteThisJavascript(jsCode.ToString())
+
+                '' 戻り値:ゼロが正常終了。それ以外は、異常終了。
+                If (jsRc <> "0") Then
+                    Throw New Exception("SetSecurityToPdf:" & jsRc)
+                End If
+
+                '' AVDoc.Close(bNoSave)
+                '' bNoSave:
+                '' 正の数:PDFドキュメントを保存しないで閉じます。 
+                '' 0でPDFドキュメントが変更されていた:保存するかどうか確認するダイアログを表示
+                '' 負の数:確認なしにPDFドキュメントを保存。
+
+                '' javascriptの中でPDFファイルの保存をするので、ここでは保存せずに閉じます。
+                '' というか、javascriptの外側では保存できないので、こうせざるを得ない。
+                rc = inAvDoc.Close(1)
+
+                If rc Then
+                    log_.WriteLine(">>security pdf document to save (" & outPdfFilePath & ").")
+                Else
+                    Throw New IOException("It failed security pdf document to save (" + outPdfFilePath + ").")
+                End If
+
+                result(0) = outPdfFilePath
+                result(1) = log_.ToString()
+
+            Catch ex As Exception
+                '' セキュリティ設定用に作ったPDFドキュメントを保存せずに閉じます。
+                rc = inAvDoc.Close(1)
+                '' 仮に保存したファイルを削除します。
+                File.Delete(outPdfFilePath)
+                Throw ex
+            Finally
+                If Not (fields Is Nothing) Then
+                    Marshal.ReleaseComObject(fields)
+                    fields = Nothing
+                End If
+                If Not (formApp Is Nothing) Then
+                    Marshal.ReleaseComObject(formApp)
+                    formApp = Nothing
+                End If
+                If Not (inAvDoc Is Nothing) Then
+                    inAvDoc.Close(1)
+                    Marshal.ReleaseComObject(inAvDoc)
+                    inAvDoc = Nothing
+                End If
+                If Not (inPdDoc Is Nothing) Then
+                    inPdDoc.Close()
+                    Marshal.ReleaseComObject(inPdDoc)
+                    inPdDoc = Nothing
+                End If
+            End Try
+
+            Return result
+
+        End Function
+#End Region
 
 #Region "Dispose"
         ''' <summary>
