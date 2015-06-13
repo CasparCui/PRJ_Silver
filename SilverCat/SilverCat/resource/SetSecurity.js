@@ -11,7 +11,7 @@ SilverCat.sigField_cFieldType = "signature";
 * @param jsonSecurityParam セキュリティ設定パラメータ。
 */
 SetSecurityToPdf = app.trustedFunction (
-  function(doc, jsonSecurityParam) {
+  function(doc, jsonSecurityParam, outputPdfFilePath) {
     try {
       app.beginPriv();
       if(jsonSecurityParam.recipientPublicCerts == null) {
@@ -20,7 +20,7 @@ SetSecurityToPdf = app.trustedFunction (
         SetSecurityPublicDigitalIds(doc, jsonSecurityParam.recipientPublicCerts);
       }
       doc.saveAs({
-        cPath:"c:/temp/a.pdf"
+        cPath:outputPdfFilePath
       });
       
       event.value = "0";
@@ -39,18 +39,17 @@ SetSecurityToPdf = app.trustedFunction (
 * @param jsonSignParam 電子署名パラメータ。
 */
 SignToPdf = app.trustedFunction (
-  function(doc, jsonSignParam) {
+  function(doc, jsonSecurityParam) {
     try {
       app.beginPriv();
-      var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSignParam);
+      var field = AddSignatureField(doc, SilverCat.sigField_cName, SilverCat.sigField_cFieldType, jsonSecurityParam);
       if(field) {
-        if(jsonSignParam.recipientPublicCerts == null) {
-          SetSecurityPolicy(doc, jsonSignParam.securityPolicyName);
-          EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath);
+        if(jsonSecurityParam.recipientPublicCerts == null) {
+          SetSecurityPolicy(doc, jsonSecurityParam.securityPolicyName);
         } else {
-          SetSecurityPublicDigitalIds(doc, jsonSignParam.recipientPublicCerts);
-          EmbedSignToPdf(doc, field, jsonSignParam.password, jsonSignParam.digitalIdFilePath);
+          SetSecurityPublicDigitalIds(doc, jsonSecurityParam.recipientPublicCerts);
         }
+        EmbedSignToPdf(doc, field, jsonSecurityParam.password, jsonSecurityParam.digitalIdFilePath, jsonSecurityParam.appearanceSignature);
       }
       event.value = "0";
       app.endPriv();
@@ -196,9 +195,10 @@ SetSecurityPublicDigitalIds = app.trustedFunction (
 * @param sigField 電子署名フィールド。
 * @param pwd 電子証明書パスワード。
 * @param did 電子証明書ファイルのフルパス。
+* @param appearanceSignature 電子署名の表示の仕方。
 */
 EmbedSignToPdf = app.trustedFunction (
-  function(doc, sigField, pwd, did) {
+  function(doc, sigField, pwd, did, appearanceSignature) {
     try {
       app.beginPriv();
 
@@ -209,11 +209,14 @@ EmbedSignToPdf = app.trustedFunction (
       // よくわからないがゼロ秒じゃない値、例えば30秒を指定。
       sh.setPasswordTimeout(pwd, 30); 
 
+
+
       // 電子署名情報の設定。
       // mdp:"allowAll":普通署名。
       //     "allowNone","default","defaultAndComments":MDP署名。
       var sigInfo = {
-        mdp: "allowNone"
+        mdp: "allowNone",
+        appearance: appearanceSignature
       };
       // 電子署名をする。
       sigField.signatureSign({oSig: sh, oInfo: sigInfo, bUI: false});
