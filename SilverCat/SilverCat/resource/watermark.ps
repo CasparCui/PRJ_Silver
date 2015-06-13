@@ -1,0 +1,36 @@
+% --- 用紙定義([595 842]はA4縦) -------------------------------------------
+<< /PageSize [595 842] >> setpagedevice %%EndSetup 
+
+% --- フォント定義 --------------------------------------------------------
+/KozGoPr6N-Medium-90ms-RKSJ-H findfont
+10 scalefont setfont
+
+% --- 変数の定義 ----------------------------------------------------------
+/LM 10 def % ?
+
+% --- サブルーチン定義 ----------------------------------------------------
+% --- 改行処理 ------------------------------------------------------------
+% PostScriptでは左下隅が座標原点。
+% 「currentpoint 10 add」は、
+% 縦軸上方向に行を移動している。
+/printNewLine {
+    currentpoint 10 add
+    exch pop
+    LM exch
+    moveto
+} def
+
+% --- 文字列印字 ----------------------------------------------------------
+/printStringLine {
+    (Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字　Watermark　透かし文字) show
+    printNewLine
+} def
+
+% --- main ----------------------------------------------------------------
+% 左下隅の原点から縦軸上方向に10ptずつ840まで繰り返す。
+LM 0 moveto
+0 10 840 {
+    printStringLine
+} for
+
+showpage

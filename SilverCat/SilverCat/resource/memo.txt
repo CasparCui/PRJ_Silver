@@ -31,3 +31,52 @@ Verifying - Enter Export Password:
 ■参考URL
 http://help.adobe.com/livedocs/acrobat_sdk/9.1/Acrobat9_1_HTMLHelp/wwhelp/wwhimpl/js/html/wwhelp.htm?&accessible=true
 http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.pdf
+
+■JSON形式セキュリティ設定パラメータ
+{
+// 電子署名フィールドの矩形座標
+"x":1,
+"y":1,
+"width":36,
+"height":36,
+
+// 電子署名に利用する電子証明書のフルパスとパスワード
+"digitalIdFilePath":"D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/my_private_key.p12",
+"password":"password!",
+
+// AcrobatPro「表示(V)」「ツール(T)」「保護(R)」「暗号化」「セキュリティポリシーを管理(M)...」に
+// "PASSWORD_ENCRYPT_POLICY"を事前に設定のこと。この文字列でjavascript内でセキュリティ設定をします。
+"securityPolicyName":"PASSWORD_ENCRYPT_POLICY",
+
+// 受信者の公開鍵は使わない
+"recipientPublicCerts":null,
+
+// AcrobatPro「編集(E)」「環境設定(N)...」「分類(G)」「署名」「電子署名」「作成と表示方法」「詳細...」「表示方法」に
+// "AppearanceSilverCatSignature"を事前に設定のこと。この文字列でjavascript内で電子署名の表示方法を設定するため。
+"appearanceSignature":"AppearanceSilverCatSignature"
+}
+
+■JSON形式受信者の公開鍵によるセキュリティ設定パラメータ
+{
+// 電子署名フィールドの矩形座標
+"x":1,
+"y":1,
+"width":36,
+"height":36,
+
+// 電子署名に利用する電子証明書のフルパスとパスワード
+"digitalIdFilePath":"D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/my_private_key.p12",
+"password":"password!",
+
+// AcrobatPro「表示(V)」「ツール(T)」「保護(R)」「暗号化」「セキュリティポリシーを管理(M)...」に
+// "PASSWORD_ENCRYPT_POLICY"を事前に設定のこと。この文字列でjavascript内でセキュリティ設定をします。
+"securityPolicyName":"PASSWORD_ENCRYPT_POLICY",
+
+// 受信者の公開鍵のフルパスの配列。
+"recipientPublicCerts":["D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeHanako.cer",
+                        "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeTaro.cer"],
+
+// AcrobatPro「編集(E)」「環境設定(N)...」「分類(G)」「署名」「電子署名」「作成と表示方法」「詳細...」「表示方法」に
+// "AppearanceSilverCatSignature"を事前に設定のこと。この文字列でjavascript内で電子署名の表示方法を設定するため。
+"appearanceSignature":"AppearanceSilverCatSignature"
+}

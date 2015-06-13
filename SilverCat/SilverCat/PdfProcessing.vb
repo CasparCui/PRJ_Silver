@@ -384,6 +384,128 @@ Namespace SilverCat
         End Function
 #End Region
 
+#Region "PDFファイルにウォーターマークを設定します。"
+        ''' <summary>
+        ''' PDFファイルにウォーターマークを設定します。
+        ''' </summary>
+        ''' <paramref name="inPdfFilePath">入力PDFファイルへのフルパス。</paramref>
+        ''' <paramref name="outPdfFilePath">出力PDFファイルへのフルパス。</paramref>
+        ''' <paramref name="processingParameter">PDFファイル加工指示命令。JSON形式のString。</paramref>
+        ''' <remarks>
+        ''' </remarks>
+        ''' <returns>
+        ''' String(0):出力PDFファイルのフルパス。
+        ''' String(1):ログメッセージ文字列。
+        ''' </returns>
+        Public Function SetWatermarkPdf(ByVal inPdfFilePath As String, _
+                                ByVal outPdfFilePath As String, _
+                                ByVal processingParameter As Dictionary(Of String, Dictionary(Of String, Object))) As String()
+
+            Dim inPdDoc As AcroPDDoc = Nothing
+            Dim jsObj As Object = Nothing
+            Dim rc As Boolean
+
+            Dim result() As String = New String() {Nothing, Nothing}
+            Try
+                log_.Write(">>Input Pdf file is (")
+                log_.Write(inPdfFilePath)
+                log_.WriteLine(")")
+
+                '' ウォーターマークPDFファイルを開きます。
+                inPdDoc = New AcroPDDoc()
+                rc = inPdDoc.Open(inPdfFilePath)
+                If Not (rc) Then
+                    Throw New IOException(">>It failed to open, for file(" & inPdfFilePath & ") ")
+                End If
+
+                '' JSONオブジェクトの取得。
+                jsObj = inPdDoc.GetJSObject()
+
+                '' ウォーターマークPDFファイルによりウォーターマークを付与します。
+                Dim waterMarkParam As Dictionary(Of String, Object)
+                waterMarkParam = processingParameter.Item("waterMark")
+                ' Add a watermark from a file.
+                ' function prototype:
+                '   addWatermarkFromFile(cDIPath, nSourcePage, nStart, nEnd, bOnTop, bOnScreen, bOnPrint, nHorizAlign, nVertAlign, nHorizValue, nVertValue, bPercentage, nScale, bFixedPrint, nRotation, nOpacity)
+                jsObj.addWatermarkFromFile(waterMarkParam.Item("cDIPath"),
+                                           waterMarkParam.Item("nSourcePage"),
+                                           waterMarkParam.Item("nStart"),
+                                           waterMarkParam.Item("nEnd"),
+                                           waterMarkParam.Item("bOnTop"),
+                                           waterMarkParam.Item("bOnScreen"),
+                                           waterMarkParam.Item("bOnPrint"),
+                                           ChangeHorizAlign(waterMarkParam.Item("nHorizAlign")),
+                                           ChangeVartAlign(waterMarkParam.Item("nVertAlign")),
+                                           waterMarkParam.Item("nHorizValue"),
+                                           waterMarkParam.Item("nVertValue"),
+                                           waterMarkParam.Item("bPercentage"),
+                                           waterMarkParam.Item("nScale"),
+                                           waterMarkParam.Item("bFixedPrint"),
+                                           waterMarkParam.Item("nRotation"),
+                                           CType(waterMarkParam.Item("nOpacity"), Double),
+                )
+
+                '' 出来上がったPDFファイルをファイルとしてに保存します。
+                rc = inPdDoc.Save(PDSaveFlags.PDSaveFull, outPdfFilePath)
+                If Not (rc) Then
+                    Throw New IOException(">>It failed to add watermark, for file(" & inPdfFilePath & ") ")
+                End If
+
+                result(0) = outPdfFilePath
+                result(1) = log_.ToString()
+
+            Finally
+                If Not (jsObj Is Nothing) Then
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(jsObj)
+                    jsObj = Nothing
+                End If
+                If Not (inPdDoc Is Nothing) Then
+                    inPdDoc.Close()
+                    Marshal.ReleaseComObject(inPdDoc)
+                    inPdDoc = Nothing
+                End If
+            End Try
+
+            Return result
+
+        End Function
+        Private Function ChangeHorizAlign(ByVal nH As String) As Integer
+            '' jsObj.app.constants.align.left = 0
+            '' jsObj.app.constants.align.center = 1
+            '' jsObj.app.constants.align.right = 2
+            Dim nHorizAlign As Integer
+            Select Case nH
+                Case "left"
+                    nHorizAlign = 0
+                Case "center"
+                    nHorizAlign = 1
+                Case "right"
+                    nHorizAlign = 2
+                Case Else
+                    Throw New ArgumentException(">>ChangeHorizAlign Function argment (" & nH & ") does not work.")
+            End Select
+            Return nHorizAlign
+        End Function
+        Private Function ChangeVartAlign(ByVal nV As String) As Integer
+            '' jsObj.app.constants.align.top = 3
+            '' jsObj.app.constants.align.center = 1
+            '' jsObj.app.constants.align.bottom = 4
+            Dim nVartAlign As Integer
+            Select Case nV
+                Case "top"
+                    nVartAlign = 3
+                Case "center"
+                    nVartAlign = 1
+                Case "bottom"
+                    nVartAlign = 4
+                Case Else
+                    Throw New ArgumentException(">>ChangeVartAlign Function argment (" & nV & ") does not work.")
+            End Select
+            Return nVartAlign
+        End Function
+
+#End Region
+
 #Region "Dispose"
         ''' <summary>
         ''' リソース解放
@@ -408,6 +530,7 @@ Namespace SilverCat
             GC.SuppressFinalize(Me)
         End Sub
 #End Region
+
 
     End Class
 
