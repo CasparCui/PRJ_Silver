@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\sample.ps" />
+    <None Include="data\sample_signed.pdf" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
