@@ -152,6 +152,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="resource\電子署名用画像.jpg" />
     <Content Include="resource\SetSecurity.js" />
     <Content Include="resource\memo.txt" />
   </ItemGroup>
