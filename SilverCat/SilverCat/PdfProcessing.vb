@@ -439,7 +439,7 @@ Namespace SilverCat
                                            waterMarkParam.Item("nHorizValue"),
                                            waterMarkParam.Item("nVertValue"),
                                            waterMarkParam.Item("bPercentage"),
-                                           waterMarkParam.Item("nScale"),
+                                           CType(waterMarkParam.Item("nScale"), Double),
                                            waterMarkParam.Item("bFixedPrint"),
                                            waterMarkParam.Item("nRotation"),
                                            CType(waterMarkParam.Item("nOpacity"), Double),
