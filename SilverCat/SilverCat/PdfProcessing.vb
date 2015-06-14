@@ -496,26 +496,22 @@ Namespace SilverCat
 
             '''　<summary>PDFファイルにPDFファイルをウォーターマークとして付け加えます。</summary>
             ''' <param name="waterMarkParam">
-            ''' <code>
-            ''' Dim addFileWatermarkParam As Object() = new Object() {
-            '''     waterMarkFilePath, '' cDIPath:ウォーターマークPDFファイルパス。
-            '''     0,       '' nSourcePage:ゼロは、ウォーターマークPDFファイルの最初のページをウォーターマークにする。
-            '''     -1,      '' nStart:開始ページ。
-            '''     -1,      '' nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
-            '''     false,   '' bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
-            '''     true,    '' bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
-            '''     true,    '' bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
-            '''     jsObj.AlignCenter,       '' nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-            '''     jsObj.AlignCenter,       '' nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-            '''     0,       '' nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
-            '''     0,       '' nVartValue:下からの位置。XY 座標は（0,0）の左下隅
-            '''     false,   '' bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
-            '''     -1.0,    '' nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
-            '''     true,    '' bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
-            '''     0,       '' nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
-            '''     0.1      '' nOpactiy:透明度:0.1=透明度10%。
-            ''' };
-            ''' </code>
+            '''"cDIPath": waterMarkFilePath, 　　　　　　  // ウォーターマークPDFファイルパス。
+            '''"nSourcePage": 0,                           // ゼロは、ウォーターマークPDFファイルの最初のページをウォーターマークにする。
+            '''"nStart": -1,                               // 開始ページ。
+            '''"nEnd": -1,                                 // 終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+            '''"bOnTop": false,                            // ウォーターマークの前景と背景。true:前景、false:背景。
+            '''"bOnScreen": false,                         // ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+            '''"bOnPrint": true,                           // ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+            '''"nHorizAlign": "center",                    // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''"nVertAlign": "center",                     // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''"nHorizValue": 0,                           // 左からの位置。XY 座標は（0,0）の左下隅
+            '''"nVertValue": 0,                            // 下からの位置。XY 座標は（0,0）の左下隅
+            '''"bPercentage": false,                       // 上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+            '''"nScale": -1.0,                             // ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+            '''"bFixedPrint": true,                        // ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+            '''"nRotation": 0,                             // ゼロ:0=回転ゼロ度。つまり回転しない。
+            '''"nOpacity": 0.1                             // 透明度:1.0=透明度100%。
             ''' </param>
             Public Sub addWatermarkFromFile(ByRef waterMarkParam As Dictionary(Of String, Object))
                 Dim addFileWatermarkParam As Object() = New Object() {
@@ -545,30 +541,28 @@ Namespace SilverCat
             ''' 文字列をウォーターマークとしてPDFファイルに付与します。
             ''' </summary>
             ''' <param name="waterMarkParam">
-            ''' <code>
-            ''' Dim addFileWatermarkParam As Object() = new Object() {
-            '''     "COPY",             '' cText:ウォーターマーク文字列
-            '''     jsObj.AlignCenter,  '' nTextAlign
-            '''     "MS-Gothic",        '' cFont:フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
-            '''                         '' PostScriptファイルで指定する形式のフォント名で記述する。
-            '''     100,                '' nFontSize:フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。100=100pt。
-            '''     jsObj.Blue,         '' aColor:文字色。"black","blue","cyan","dkGray","gray","green","ltGray","magenta","red","white","yellow"。
-            '''     0,                  '' nStart:開始ページ。
-            '''     0,                  '' nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
-            '''     true,               '' bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
-            '''     true,               '' bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
-            '''     true,               '' bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
-            '''     jsObj.AlignCenter,  '' nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-            '''     jsObj.AlignTop,     '' nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-            '''     20,                 '' nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
-            '''     -45,                '' nVartValue:下からの位置。XY 座標は（0,0）の左下隅
-            '''     false,              '' bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
-            '''     1.0,                '' nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
-            '''     false,              '' bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
-            '''     0,                  '' nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
-            '''     0.7                 '' nOpactiy:透明度:0.7=透明度70%
-            ''' };
-            ''' </code>
+            '''"cText": "これはウォーターマークです。",    // ウォーターマーク文字列。
+            '''"nTextAlign": "center",                     // ウォーターマークの文字列が複数行に渡るときに意味が出てくるパラメータ。
+            '''                                            // 複数行に渡った時の文字列の配置を指示する。
+            '''                                            // left:0, center:1, right:2, top:3, bottom:4。
+            '''"cFont": "KozGoPr6N-Medium-90ms-RKSJ-H",    // フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
+            '''                                            // PostScriptファイルで指定する形式のフォント名で記述する。
+            '''"nFontSize": 8,                             // フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。8=8pt。
+            '''"aColor": "blue",                           // 文字色。"black","blue","cyan","dkGray","gray","green","ltGray","magenta","red","white","yellow"。
+            '''"nStart": -1,                               // 開始ページ。
+            '''"nEnd": -1,                                 // 終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+            '''"bOnTop": true,                             // ウォーターマークの前景と背景。true:前景、false:背景。
+            '''"bOnScreen": true,                          // ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+            '''"bOnPrint": true,                           // ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+            '''"nHorizAlign": "right",                     // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''"nVertAlign": "top",                        // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''"nHorizValue": 0,                           // 左からの位置。XY 座標は（0,0）の左下隅
+            '''"nVertValue": 0,                            // 下からの位置。XY 座標は（0,0）の左下隅
+            '''"bPercentage": false,                       // 上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+            '''"nScale": 1.0,                              // ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+            '''"bFixedPrint": false,                       // ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+            '''"nRotation": 0,                             // ゼロ:0=回転ゼロ度。つまり回転しない。
+            '''"nOpacity": 1.0                             // 透明度:1.0=透明度100%。
             ''' </param>
             Public Sub addWatermarkFromText(ByRef waterMarkParam As Dictionary(Of String, Object))
                 Dim addTextWatermarkParam As Object() = New Object() {
