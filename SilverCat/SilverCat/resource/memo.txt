@@ -81,26 +81,65 @@ http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.p
 "appearanceSignature":"AppearanceSilverCatSignature"
 }
 
-■ウォーターマークのパラメータの意味
-"cText":"これはウォーターマークです。",    // ウォーターマーク文字列。
-"nTextAlign":,                             // ウォーターマークの文字列が複数行に渡るときに意味が出てくるパラメータ。
-                                           // 複数行に渡った時の文字列の配置を指示する。
-                                           // left:0, center:1, right:2, top:3, bottom:4。
-"cFont":"KozGoProVI-Medium-90ms-RKSJ-H",   // フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
-                                           // PostScriptファイルで指定する形式のフォント名で記述する。
-"nFontSize":8,                             // フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。8=8pt。
-"aColor":                                  // 文字色。
-                            -1,                 // nStart:開始ページ。
-                            -1,                 // nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
-                            true,               // bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
-                            true,               // bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
-                            true,               // bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
-                            jsObj.AlignLeft,    // nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-                            jsObj.AlignTop,     // nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
-                            0,                  // nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
-                            0,                  // nVartValue:下からの位置。XY 座標は（0,0）の左下隅
-                            false,              // bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
-                            1.0,                // nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
-                            false,              // bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
-                            0,                  // nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
-                            1.0                 // nOpactiy:透明度:1.0=透明度100%
+■JSON形式PDFファイル加工指示パラメータの意味
+"foreground"、"waterMark"、"xmp"の3つの加工ができます。
+この3つの内、使いたくない加工指示があったら、nullを指定します。例えば、warterMarkだけやりたいときは次のような指定になります。
+{
+    "foreground":null,
+    "waterMark":{
+        // 省略
+    },
+    "xmp":null
+}
+
+各パラメータの意味は以下の通り。
+{
+    "foreground": {
+        "cText": "これはウォーターマークです。",    // ウォーターマーク文字列。
+        "nTextAlign": "center",                     // ウォーターマークの文字列が複数行に渡るときに意味が出てくるパラメータ。
+                                                    // 複数行に渡った時の文字列の配置を指示する。
+                                                    // left:0, center:1, right:2, top:3, bottom:4。
+        "cFont": "KozGoPr6N-Medium-90ms-RKSJ-H",    // フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
+                                                    // PostScriptファイルで指定する形式のフォント名で記述する。
+        "nFontSize": 8,                             // フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。8=8pt。
+        "aColor": "blue",                           // 文字色。"black","blue","cyan","dkGray","gray","green","ltGray","magenta","red","white","yellow"。
+        "nStart": -1,                               // 開始ページ。
+        "nEnd": -1,                                 // 終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+        "bOnTop": true,                             // ウォーターマークの前景と背景。true:前景、false:背景。
+        "bOnScreen": true,                          // ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+        "bOnPrint": true,                           // ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+        "nHorizAlign": "right",                     // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+        "nVertAlign": "top",                        // ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+        "nHorizValue": 0,                           // 左からの位置。XY 座標は（0,0）の左下隅
+        "nVertValue": 0,                            // 下からの位置。XY 座標は（0,0）の左下隅
+        "bPercentage": false,                       // 上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+        "nScale": 1.0,                              // ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+        "bFixedPrint": false,                       // ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+        "nRotation": 0,                             // ゼロ:0=回転ゼロ度。つまり回転しない。
+        "nOpacity": 1.0                             // 透明度:1.0=透明度100%。
+    },
+    "waterMark": {
+        "cDIPath": "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/watermark.pdf",
+                                                    // ウォーターマークに利用するPDFファイルのフルパス。
+        "nSourcePage": 0,                           // ゼロは、ウォーターマークPDFファイルの最初のページをウォーターマークにする。
+        "nStart": -1,
+        "nEnd": -1,
+        "bOnTop": false,
+        "bOnScreen": false,
+        "bOnPrint": true,
+        "nHorizAlign": "center",
+        "nVertAlign": "center",
+        "nHorizValue": 0,
+        "nVertValue": 0,
+        "bPercentage": false,
+        "nScale": -1,
+        "bFixedPrint": true,
+        "nRotation": 0,
+        "nOpacity": 0.1
+    },
+    "xmp": {
+        "path": "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/sample.xmp"
+                                                    // XMPファイルのフルパス。
+    }
+}
+

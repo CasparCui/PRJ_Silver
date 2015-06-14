@@ -39,8 +39,8 @@ Namespace SilverCat
                                (New Uri(baseUri, "resource\SilverCat.joboptions")).AbsolutePath)
                 Console.Error.WriteLine(res(1))
 
-                '' ウォーターマークの設定
-                res = pdfP.SetWatermarkPdf(res(0), (New Uri(baseUri, "data\sample_watermark.pdf")).AbsolutePath, processingParam)
+                '' PDFファイルの加工
+                res = pdfP.ProcessPdf(res(0), (New Uri(baseUri, "data\sample_watermark.pdf")).AbsolutePath, processingParam)
                 Console.Error.WriteLine(res(1))
 
                 '' 電子署名
@@ -53,8 +53,8 @@ Namespace SilverCat
                                (New Uri(baseUri, "resource\SilverCat.joboptions")).AbsolutePath)
                 Console.Error.WriteLine(res(1))
 
-                '' ウォーターマークの設定
-                res = pdfP.SetWatermarkPdf(res(0), (New Uri(baseUri, "data\sample2_watermark.pdf")).AbsolutePath, processingParam)
+                '' PDFファイルの加工
+                res = pdfP.ProcessPdf(res(0), (New Uri(baseUri, "data\sample2_watermark.pdf")).AbsolutePath, processingParam)
                 Console.Error.WriteLine(res(1))
 
                 '' セキュリティ設定のみ

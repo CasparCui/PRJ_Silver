@@ -117,6 +117,7 @@
     <None Include="resource\my_cert.pem" />
     <None Include="resource\my_private_key.p12" />
     <None Include="resource\my_private_key.pem" />
+    <None Include="resource\sample.xmp" />
     <None Include="resource\SilverCat.joboptions" />
     <None Include="resource\Taro.pfx" />
     <None Include="resource\watermark.pdf" />

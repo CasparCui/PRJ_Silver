@@ -383,9 +383,9 @@ Namespace SilverCat
         End Function
 #End Region
 
-#Region "PDFファイルにウォーターマークを設定します。"
+#Region "PDFファイルを加工指示命令に従って加工します。"
         ''' <summary>
-        ''' PDFファイルにウォーターマークを設定します。
+        ''' PDFファイルを加工指示命令に従って加工します。
         ''' </summary>
         ''' <paramref name="inPdfFilePath">入力PDFファイルへのフルパス。</paramref>
         ''' <paramref name="outPdfFilePath">出力PDFファイルへのフルパス。</paramref>
@@ -396,7 +396,7 @@ Namespace SilverCat
         ''' String(0):出力PDFファイルのフルパス。
         ''' String(1):ログメッセージ文字列。
         ''' </returns>
-        Public Function SetWatermarkPdf(ByVal inPdfFilePath As String, _
+        Public Function ProcessPdf(ByVal inPdfFilePath As String, _
                                 ByVal outPdfFilePath As String, _
                                 ByVal processingParameter As Dictionary(Of String, Dictionary(Of String, Object))) As String()
 
@@ -420,13 +420,24 @@ Namespace SilverCat
                 '' JSONオブジェクトの取得。
                 jsObj = New JSObject(inPdDoc.GetJSObject())
 
-                '' ウォーターマークPDFファイルによりウォーターマークを付与します。
-                jsObj.addWatermarkFromFile(processingParameter.Item("waterMark"))
+                '' 前面にウォーターマークテキストを付与します。
+                Dim foreground As Dictionary(Of String, Object) = CType(processingParameter.Item("foreground"), Dictionary(Of String, Object))
+                If Not (foreground Is Nothing) Then
+                    jsObj.addWatermarkFromText(foreground)
+                End If
 
-                '' ウォーターマークテキストを付与します。
-                Dim header As Dictionary(Of String, Object) = CType(processingParameter.Item("header"), Dictionary(Of String, Object))
-                If Not (header Is Nothing) Then
-                    jsObj.addWatermarkFromText(header)
+                '' ウォーターマークPDFファイルによりウォーターマークを付与します。
+                Dim watermark As Dictionary(Of String, Object) = CType(processingParameter.Item("waterMark"), Dictionary(Of String, Object))
+                If Not (watermark Is Nothing) Then
+                    jsObj.addWatermarkFromFile(watermark)
+                End If
+
+                '' XMPメタを付与します。
+                Dim xmp As Dictionary(Of String, Object) = CType(processingParameter.Item("xmp"), Dictionary(Of String, Object))
+                If Not (xmp Is Nothing) Then
+                    Dim xmpString As Object
+                    xmpString = System.IO.File.ReadAllText(xmp.Item("path"), System.Text.Encoding.UTF8)
+                    jsObj.Metadata = xmpString
                 End If
 
                 '' 出来上がったPDFファイルをファイルとしてに保存します。
@@ -466,6 +477,13 @@ Namespace SilverCat
             ''' <summary>Acrobat Colorインスタンス。</summary>
             Private acroColor_ As Object
 
+            ''' <summary>コンストラクタ。</summary>
+            ''' <param name="acroJson">Acrobat JSONオブジェクト。</param>
+            Public Sub New(ByRef acroJson As Object)
+                Me.acroJson_ = acroJson
+                Dim jsonType As Type = Me.acroJson_.GetType()
+                Me.acroColor_ = jsonType.InvokeMember("color", BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, Nothing)
+            End Sub
             ''' <summary>XMPメタデータ。</summary>
             Public Property Metadata() As Object
                 Set(value As Object)
@@ -475,14 +493,6 @@ Namespace SilverCat
                     Return Me.acroJson_.GetType().InvokeMember("metadata", BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, Nothing)
                 End Get
             End Property
-
-            ''' <summary>コンストラクタ。</summary>
-            ''' <param name="acroJson">Acrobat JSONオブジェクト。</param>
-            Public Sub New(ByRef acroJson As Object)
-                Me.acroJson_ = acroJson
-                Dim jsonType As Type = Me.acroJson_.GetType()
-                Me.acroColor_ = jsonType.InvokeMember("color", BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, Nothing)
-            End Sub
 
             '''　<summary>PDFファイルにPDFファイルをウォーターマークとして付け加えます。</summary>
             ''' <param name="waterMarkParam">
@@ -536,13 +546,13 @@ Namespace SilverCat
             ''' </summary>
             ''' <param name="waterMarkParam">
             ''' <code>
-            ''' Dim addFileWatermarkParam() As Object = new Object() {
+            ''' Dim addFileWatermarkParam As Object() = new Object() {
             '''     "COPY",             '' cText:ウォーターマーク文字列
             '''     jsObj.AlignCenter,  '' nTextAlign
             '''     "MS-Gothic",        '' cFont:フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
             '''                         '' PostScriptファイルで指定する形式のフォント名で記述する。
             '''     100,                '' nFontSize:フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。100=100pt。
-            '''     jsObj.Blue,         '' aColor:文字色。
+            '''     jsObj.Blue,         '' aColor:文字色。"black","blue","cyan","dkGray","gray","green","ltGray","magenta","red","white","yellow"。
             '''     0,                  '' nStart:開始ページ。
             '''     0,                  '' nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
             '''     true,               '' bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
