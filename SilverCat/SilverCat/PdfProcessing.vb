@@ -410,7 +410,7 @@ Namespace SilverCat
                 log_.Write(inPdfFilePath)
                 log_.WriteLine(")")
 
-                '' ウォーターマークPDFファイルを開きます。
+                '' これから加工したいPDFファイルを開きます。
                 inPdDoc = New AcroPDDoc()
                 rc = inPdDoc.Open(inPdfFilePath)
                 If Not (rc) Then
