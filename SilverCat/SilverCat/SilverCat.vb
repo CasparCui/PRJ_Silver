@@ -16,11 +16,11 @@ Namespace SilverCat
                 Dim securityParam As Hashtable
                 Dim jsonSecurityParam As String
                 '' 受信者の公開鍵で暗号化する場合はこちらのJSONパラメータで暗号化する。
-                ''      (New Uri(baseUri, "resource\JsonSecurityParameterRecipient.txt")).AbsolutePath, _
+                ''      (New Uri(baseUri, "resource\JsonSecurityParameterRecipient.json")).AbsolutePath, _
                 '' 電子署名用JSONパラメータ
                 securityParam = (New JavaScriptSerializer).Deserialize(Of Hashtable)(
                     System.IO.File.ReadAllText( _
-                        (New Uri(baseUri, "resource\JsonSecurityParameter.txt")).AbsolutePath, _
+                        (New Uri(baseUri, "resource\JsonSecurityParameter.json")).AbsolutePath, _
                         System.Text.Encoding.UTF8) _
                 )
                 jsonSecurityParam = (New JavaScriptSerializer).Serialize(securityParam).ToString()
@@ -29,7 +29,7 @@ Namespace SilverCat
                 Dim processingParam As Dictionary(Of String, Dictionary(Of String, Object))
                 processingParam = (New JavaScriptSerializer).Deserialize(Of Dictionary(Of String, Dictionary(Of String, Object)))(
                     System.IO.File.ReadAllText( _
-                        (New Uri(baseUri, "resource\JsonProcessingParameter.txt")).AbsolutePath, _
+                        (New Uri(baseUri, "resource\JsonProcessingParameter.json")).AbsolutePath, _
                         System.Text.Encoding.UTF8) _
                 )
 

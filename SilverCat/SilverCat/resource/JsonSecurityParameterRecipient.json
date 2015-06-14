@@ -1,0 +1,14 @@
+﻿{
+    "x": 1,
+    "y": 1,
+    "width": 36,
+    "height": 36,
+    "digitalIdFilePath": "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/my_private_key.p12",
+    "password": "password!",
+    "securityPolicyName": "PASSWORD_ENCRYPT_POLICY",
+    "recipientPublicCerts": [
+        "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeHanako.cer",
+        "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/CertExchangeTaro.cer"
+    ],
+    "appearanceSignature": "AppearanceSilverCatSignature"
+}

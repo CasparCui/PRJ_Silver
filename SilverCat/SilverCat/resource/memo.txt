@@ -80,3 +80,27 @@ http://kb2.adobe.com/jp/cps/511/511344/attachments/511344_Security_2005_DevCon.p
 // "AppearanceSilverCatSignature"を事前に設定のこと。この文字列でjavascript内で電子署名の表示方法を設定するため。
 "appearanceSignature":"AppearanceSilverCatSignature"
 }
+
+■ウォーターマークのパラメータの意味
+"cText":"これはウォーターマークです。",    // ウォーターマーク文字列。
+"nTextAlign":,                             // ウォーターマークの文字列が複数行に渡るときに意味が出てくるパラメータ。
+                                           // 複数行に渡った時の文字列の配置を指示する。
+                                           // left:0, center:1, right:2, top:3, bottom:4。
+"cFont":"KozGoProVI-Medium-90ms-RKSJ-H",   // フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
+                                           // PostScriptファイルで指定する形式のフォント名で記述する。
+"nFontSize":8,                             // フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。8=8pt。
+"aColor":                                  // 文字色。
+                            -1,                 // nStart:開始ページ。
+                            -1,                 // nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+                            true,               // bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
+                            true,               // bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+                            true,               // bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+                            jsObj.AlignLeft,    // nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+                            jsObj.AlignTop,     // nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+                            0,                  // nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
+                            0,                  // nVartValue:下からの位置。XY 座標は（0,0）の左下隅
+                            false,              // bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+                            1.0,                // nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+                            false,              // bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+                            0,                  // nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
+                            1.0                 // nOpactiy:透明度:1.0=透明度100%

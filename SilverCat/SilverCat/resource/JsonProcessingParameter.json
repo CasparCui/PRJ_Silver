@@ -1,0 +1,41 @@
+﻿{
+    "waterMark": {
+        "cDIPath": "D:/Users/lemac/Source/Repos/PRJ_Silver/SilverCat/SilverCat/resource/watermark.pdf",
+        "nSourcePage": 0,
+        "nStart": -1,
+        "nEnd": -1,
+        "bOnTop": false,
+        "bOnScreen": false,
+        "bOnPrint": true,
+        "nHorizAlign": "center",
+        "nVertAlign": "center",
+        "nHorizValue": 0,
+        "nVertValue": 0,
+        "bPercentage": false,
+        "nScale": -1,
+        "bFixedPrint": true,
+        "nRotation": 0,
+        "nOpacity": 0.1
+    },
+    "header": {
+        "cText": "これはウォーターマークです。",
+        "nTextAlign":"center",
+        "cFont": "KozGoPr6N-Medium-90ms-RKSJ-H",
+        "nFontSize": 8,
+        "aColor": "blue",
+        "nStart": -1,
+        "nEnd": -1,
+        "bOnTop": true,
+        "bOnScreen": true,
+        "bOnPrint": true,
+        "nHorizAlign": "right",
+        "nVertAlign": "top",
+        "nHorizValue": 0,
+        "nVertValue": 0,
+        "bPercentage": false,
+        "nScale": 1.0,
+        "bFixedPrint": false,
+        "nRotation": 0,
+        "nOpacity": 1.0
+    }
+}

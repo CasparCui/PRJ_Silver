@@ -2,6 +2,7 @@
 Imports ACRODISTXLib
 Imports AFORMAUTLib
 Imports System.IO
+Imports System.Reflection
 
 
 Namespace SilverCat
@@ -118,7 +119,7 @@ Namespace SilverCat
                              ByVal outPdfFilePath As String, _
                              ByVal jobOptionFilePath As String) As String()
 
-            Dim result() As String = New String() {Nothing, Nothing}
+            Dim result As String() = New String() {Nothing, Nothing}
             Try
                 log_.Write(">>Input PostScript file is (")
                 log_.Write(inPsFilePath)
@@ -145,7 +146,6 @@ Namespace SilverCat
                         log_.WriteLine("It failed to execute [PdfDistiller.FileToPDF()] method.")
                         Throw New Exception(log_.ToString())
                 End Select
-
 
                 result(0) = outPdfFilePath
                 result(1) = log_.ToString()
@@ -179,7 +179,7 @@ Namespace SilverCat
             Dim fields As Fields = Nothing
             Dim rc As Boolean = False
 
-            Dim result() As String = New String() {Nothing, Nothing}
+            Dim result As String() = New String() {Nothing, Nothing}
             Try
                 log_.Write(">>Input Pdf file is (")
                 log_.Write(inPdfFilePath)
@@ -206,12 +206,11 @@ Namespace SilverCat
                 nVersion = fields.ExecuteThisJavascript("event.value = app.viewerVersion;")
                 log_.WriteLine("The Acrobat viewer version is " & nVersion & ".")
 
-
+                '' 電子署名javascriptを実行します。
                 Dim jsCode As New StringWriter
                 jsCode.Write("SignToPdf(this, ")
                 jsCode.Write(jsonSecurityParam)
                 jsCode.Write(");")
-
                 Dim jsRc As String = fields.ExecuteThisJavascript(jsCode.ToString())
 
                 '' 戻り値:ゼロが正常終了。それ以外は、異常終了。
@@ -319,13 +318,13 @@ Namespace SilverCat
                 log_.WriteLine("The Acrobat viewer version is " & nVersion & ".")
 
 
+                '' セキュリティ設定javascriptを実行します。
                 Dim jsCode As New StringWriter
                 jsCode.Write("SetSecurityToPdf(this, ")
                 jsCode.Write(jsonSecurityParam)
                 jsCode.Write(",'")
                 jsCode.Write(outPdfFilePath)
                 jsCode.Write("');")
-
                 Dim jsRc As String = fields.ExecuteThisJavascript(jsCode.ToString())
 
                 '' 戻り値:ゼロが正常終了。それ以外は、異常終了。
@@ -402,7 +401,7 @@ Namespace SilverCat
                                 ByVal processingParameter As Dictionary(Of String, Dictionary(Of String, Object))) As String()
 
             Dim inPdDoc As AcroPDDoc = Nothing
-            Dim jsObj As Object = Nothing
+            Dim jsObj As JSObject = Nothing
             Dim rc As Boolean
 
             Dim result() As String = New String() {Nothing, Nothing}
@@ -419,31 +418,16 @@ Namespace SilverCat
                 End If
 
                 '' JSONオブジェクトの取得。
-                jsObj = inPdDoc.GetJSObject()
+                jsObj = New JSObject(inPdDoc.GetJSObject())
 
                 '' ウォーターマークPDFファイルによりウォーターマークを付与します。
-                Dim waterMarkParam As Dictionary(Of String, Object)
-                waterMarkParam = processingParameter.Item("waterMark")
-                ' Add a watermark from a file.
-                ' function prototype:
-                '   addWatermarkFromFile(cDIPath, nSourcePage, nStart, nEnd, bOnTop, bOnScreen, bOnPrint, nHorizAlign, nVertAlign, nHorizValue, nVertValue, bPercentage, nScale, bFixedPrint, nRotation, nOpacity)
-                jsObj.addWatermarkFromFile(waterMarkParam.Item("cDIPath"),
-                                           waterMarkParam.Item("nSourcePage"),
-                                           waterMarkParam.Item("nStart"),
-                                           waterMarkParam.Item("nEnd"),
-                                           waterMarkParam.Item("bOnTop"),
-                                           waterMarkParam.Item("bOnScreen"),
-                                           waterMarkParam.Item("bOnPrint"),
-                                           ChangeHorizAlign(waterMarkParam.Item("nHorizAlign")),
-                                           ChangeVartAlign(waterMarkParam.Item("nVertAlign")),
-                                           waterMarkParam.Item("nHorizValue"),
-                                           waterMarkParam.Item("nVertValue"),
-                                           waterMarkParam.Item("bPercentage"),
-                                           CType(waterMarkParam.Item("nScale"), Double),
-                                           waterMarkParam.Item("bFixedPrint"),
-                                           waterMarkParam.Item("nRotation"),
-                                           CType(waterMarkParam.Item("nOpacity"), Double),
-                )
+                jsObj.addWatermarkFromFile(processingParameter.Item("waterMark"))
+
+                '' ウォーターマークテキストを付与します。
+                Dim header As Dictionary(Of String, Object) = CType(processingParameter.Item("header"), Dictionary(Of String, Object))
+                If Not (header Is Nothing) Then
+                    jsObj.addWatermarkFromText(header)
+                End If
 
                 '' 出来上がったPDFファイルをファイルとしてに保存します。
                 rc = inPdDoc.Save(PDSaveFlags.PDSaveFull, outPdfFilePath)
@@ -453,10 +437,8 @@ Namespace SilverCat
 
                 result(0) = outPdfFilePath
                 result(1) = log_.ToString()
-
             Finally
                 If Not (jsObj Is Nothing) Then
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(jsObj)
                     jsObj = Nothing
                 End If
                 If Not (inPdDoc Is Nothing) Then
@@ -469,65 +451,229 @@ Namespace SilverCat
             Return result
 
         End Function
-        Private Function ChangeHorizAlign(ByVal nH As String) As Integer
-            '' jsObj.app.constants.align.left = 0
-            '' jsObj.app.constants.align.center = 1
-            '' jsObj.app.constants.align.right = 2
-            Dim nHorizAlign As Integer
-            Select Case nH
-                Case "left"
-                    nHorizAlign = 0
-                Case "center"
-                    nHorizAlign = 1
-                Case "right"
-                    nHorizAlign = 2
-                Case Else
-                    Throw New ArgumentException(">>ChangeHorizAlign Function argment (" & nH & ") does not work.")
-            End Select
-            Return nHorizAlign
-        End Function
-        Private Function ChangeVartAlign(ByVal nV As String) As Integer
-            '' jsObj.app.constants.align.top = 3
-            '' jsObj.app.constants.align.center = 1
-            '' jsObj.app.constants.align.bottom = 4
-            Dim nVartAlign As Integer
-            Select Case nV
-                Case "top"
-                    nVartAlign = 3
-                Case "center"
-                    nVartAlign = 1
-                Case "bottom"
-                    nVartAlign = 4
-                Case Else
-                    Throw New ArgumentException(">>ChangeVartAlign Function argment (" & nV & ") does not work.")
-            End Select
-            Return nVartAlign
-        End Function
 
 #End Region
 
+#Region "JSONオブジェクト"
+        ''' <summary>
+        ''' Adobe Acrobat JSONオブジェクトのラッパークラス
+        ''' </summary>
+        Class JSObject
+            Implements IDisposable
+            ''' <summary>Acrobat JSONオブジェクトのインスタンス。</summary>
+            Private acroJson_ As Object
+
+            ''' <summary>Acrobat Colorインスタンス。</summary>
+            Private acroColor_ As Object
+
+            ''' <summary>XMPメタデータ。</summary>
+            Public Property Metadata() As Object
+                Set(value As Object)
+                    Me.acroJson_.GetType().InvokeMember("metadata", BindingFlags.SetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, New Object() {value})
+                End Set
+                Get
+                    Return Me.acroJson_.GetType().InvokeMember("metadata", BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, Nothing)
+                End Get
+            End Property
+
+            ''' <summary>コンストラクタ。</summary>
+            ''' <param name="acroJson">Acrobat JSONオブジェクト。</param>
+            Public Sub New(ByRef acroJson As Object)
+                Me.acroJson_ = acroJson
+                Dim jsonType As Type = Me.acroJson_.GetType()
+                Me.acroColor_ = jsonType.InvokeMember("color", BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, Nothing)
+            End Sub
+
+            '''　<summary>PDFファイルにPDFファイルをウォーターマークとして付け加えます。</summary>
+            ''' <param name="waterMarkParam">
+            ''' <code>
+            ''' Dim addFileWatermarkParam As Object() = new Object() {
+            '''     waterMarkFilePath, '' cDIPath:ウォーターマークPDFファイルパス。
+            '''     0,       '' nSourcePage:ゼロは、ウォーターマークPDFファイルの最初のページをウォーターマークにする。
+            '''     -1,      '' nStart:開始ページ。
+            '''     -1,      '' nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+            '''     false,   '' bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
+            '''     true,    '' bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+            '''     true,    '' bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+            '''     jsObj.AlignCenter,       '' nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''     jsObj.AlignCenter,       '' nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''     0,       '' nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
+            '''     0,       '' nVartValue:下からの位置。XY 座標は（0,0）の左下隅
+            '''     false,   '' bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+            '''     -1.0,    '' nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+            '''     true,    '' bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+            '''     0,       '' nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
+            '''     0.1      '' nOpactiy:透明度:0.1=透明度10%。
+            ''' };
+            ''' </code>
+            ''' </param>
+            Public Sub addWatermarkFromFile(ByRef waterMarkParam As Dictionary(Of String, Object))
+                Dim addFileWatermarkParam As Object() = New Object() {
+                    waterMarkParam.Item("cDIPath"),
+                    waterMarkParam.Item("nSourcePage"),
+                    waterMarkParam.Item("nStart"),
+                    waterMarkParam.Item("nEnd"),
+                    waterMarkParam.Item("bOnTop"),
+                    waterMarkParam.Item("bOnScreen"),
+                    waterMarkParam.Item("bOnPrint"),
+                    Me.ChangeAlignType(waterMarkParam.Item("nHorizAlign")),
+                    Me.ChangeAlignType(waterMarkParam.Item("nVertAlign")),
+                    waterMarkParam.Item("nHorizValue"),
+                    waterMarkParam.Item("nVertValue"),
+                    waterMarkParam.Item("bPercentage"),
+                    CType(waterMarkParam.Item("nScale"), Double),
+                    waterMarkParam.Item("bFixedPrint"),
+                    waterMarkParam.Item("nRotation"),
+                    CType(waterMarkParam.Item("nOpacity"), Double)
+                }
+                ' Add a watermark from a file.
+                ' function prototype:
+                '   addWatermarkFromFile(cDIPath, nSourcePage, nStart, nEnd, bOnTop, bOnScreen, bOnPrint, nHorizAlign, nVertAlign, nHorizValue, nVertValue, bPercentage, nScale, bFixedPrint, nRotation, nOpacity)
+                Me.acroJson_.GetType().InvokeMember("addWatermarkFromFile", BindingFlags.InvokeMethod Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, addFileWatermarkParam)
+            End Sub
+            ''' <summary>
+            ''' 文字列をウォーターマークとしてPDFファイルに付与します。
+            ''' </summary>
+            ''' <param name="waterMarkParam">
+            ''' <code>
+            ''' Dim addFileWatermarkParam() As Object = new Object() {
+            '''     "COPY",             '' cText:ウォーターマーク文字列
+            '''     jsObj.AlignCenter,  '' nTextAlign
+            '''     "MS-Gothic",        '' cFont:フォント名。%Acrobatインストールディレクトリ%Resource\CIDFontの下にあるフォントとか。
+            '''                         '' PostScriptファイルで指定する形式のフォント名で記述する。
+            '''     100,                '' nFontSize:フォントサイズ(単位ポイント)。1 pt = 1/72 in. (= 25.4/72 mm = 0.352 777 7... mm)。100=100pt。
+            '''     jsObj.Blue,         '' aColor:文字色。
+            '''     0,                  '' nStart:開始ページ。
+            '''     0,                  '' nEnd:終了ページ。開始と終了ページを-1にするとすべてのページにウォーターマークを付与。
+            '''     true,               '' bOnTop:ウォーターマークの前景と背景。true:前景、false:背景。
+            '''     true,               '' bOnScreen:ウォーターマークをスクリーン表示する。true:表示する、false:表示しない。
+            '''     true,               '' bOnPrint:ウォーターマークを印刷表示する。true:表示する、false:表示しない。
+            '''     jsObj.AlignCenter,  '' nHorizAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''     jsObj.AlignTop,     '' nVartAlign:ウォーターマークの配置:left:0, center:1, right:2, top:3, bottom:4
+            '''     20,                 '' nHorizValue:左からの位置。XY 座標は（0,0）の左下隅
+            '''     -45,                '' nVartValue:下からの位置。XY 座標は（0,0）の左下隅
+            '''     false,              '' bPercentage:上下左右からの位置をパーセントで指定する。true:パーセント指定する。false:パーセント指定しない。
+            '''     1.0,                '' nScale:ページに合わせた相対倍率のこと。1.0=100%でオリジナルのフォントサイズ。-1.0でページにフィット。
+            '''     false,              '' bFixedPrint:ページサイズが異なる場合、ウォーターマーク位置とサイズを一定にする。true:一定にする。false:一定にしない。
+            '''     0,                  '' nRotation:ゼロ:0=回転ゼロ度。つまり回転しない。
+            '''     0.7                 '' nOpactiy:透明度:0.7=透明度70%
+            ''' };
+            ''' </code>
+            ''' </param>
+            Public Sub addWatermarkFromText(ByRef waterMarkParam As Dictionary(Of String, Object))
+                Dim addTextWatermarkParam As Object() = New Object() {
+                    waterMarkParam.Item("cText"),
+                    Me.ChangeAlignType(waterMarkParam.Item("nTextAlign")),
+                    waterMarkParam.Item("cFont"),
+                    waterMarkParam.Item("nFontSize"),
+                    Me.GetColor(waterMarkParam.Item("aColor")),
+                    waterMarkParam.Item("nStart"),
+                    waterMarkParam.Item("nEnd"),
+                    waterMarkParam.Item("bOnTop"),
+                    waterMarkParam.Item("bOnScreen"),
+                    waterMarkParam.Item("bOnPrint"),
+                    Me.ChangeAlignType(waterMarkParam.Item("nHorizAlign")),
+                    Me.ChangeAlignType(waterMarkParam.Item("nVertAlign")),
+                    waterMarkParam.Item("nHorizValue"),
+                    waterMarkParam.Item("nVertValue"),
+                    waterMarkParam.Item("bPercentage"),
+                    CType(waterMarkParam.Item("nScale"), Double),
+                    waterMarkParam.Item("bFixedPrint"),
+                    waterMarkParam.Item("nRotation"),
+                    CType(waterMarkParam.Item("nOpacity"), Double)
+                }
+                Me.acroJson_.GetType().InvokeMember("addWatermarkFromText", BindingFlags.InvokeMethod Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroJson_, addTextWatermarkParam)
+            End Sub
+
+            ''' <summary>色の取得</summary>
+            ''' <param name="colorName">取得したい色の名称</param>
+            ''' <remarks>
+            ''' 使える色の名前は次の名前。
+            ''' "black","blue","cyan","dkGray","gray","green","ltGray","magenta","red","white","yellow"
+            ''' </remarks>
+            Public Function GetColor(ByRef colorName As String) As Object
+                Return Me.acroJson_.GetType().InvokeMember(colorName, BindingFlags.GetProperty Or BindingFlags.Public Or BindingFlags.Instance, Nothing, Me.acroColor_, Nothing)
+            End Function
+            ''' <summary>整列位置の取得</summary>
+            ''' <param name="alignName">取得したい位置の名称</param>
+            ''' <remarks>
+            ''' 使える位置の名前は次の名前。
+            ''' "left","center","right","top","bottom"
+            ''' </remarks>
+            Public Function ChangeAlignType(ByVal alignName As String) As Integer
+                Dim align As Integer
+                Select Case alignName
+                    Case "left"
+                        align = Me.acroJson_.app.constants.align.left
+                    Case "center"
+                        align = Me.acroJson_.app.constants.align.center
+                    Case "right"
+                        align = Me.acroJson_.app.constants.align.right
+                    Case "top"
+                        align = Me.acroJson_.app.constants.align.top
+                    Case "bottom"
+                        align = Me.acroJson_.app.constants.align.bottom
+                    Case Else
+                        Throw New ArgumentException(">>ChangeAlign Function argment (" & alignName & ") does not work.")
+                End Select
+                Return align
+            End Function
+            ''' <summary>リソースの解放を行います。</summary>
+            Protected disposed As Boolean = False
+            Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+                If Not Me.disposed Then
+                    If Not (Me.acroColor_ Is Nothing) Then
+                        Marshal.ReleaseComObject(Me.acroColor_)
+                        Me.acroColor_ = Nothing
+                    End If
+                    If Not (Me.acroJson_ Is Nothing) Then
+                        Marshal.ReleaseComObject(Me.acroJson_)
+                        Me.acroJson_ = Nothing
+                    End If
+                End If
+            End Sub
+            ''' <summary>リソースの解放を行います。</summary>
+            Public Sub Dispose() Implements IDisposable.Dispose
+                Dispose(True)
+                GC.SuppressFinalize(Me)
+            End Sub
+            Protected Overrides Sub Finalize()
+                Dispose(False)
+                MyBase.Finalize()
+            End Sub
+        End Class
+#End Region
+
 #Region "Dispose"
+        Protected disposed As Boolean = False
         ''' <summary>
         ''' リソース解放
         ''' </summary>
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
             Console.Error.WriteLine(">PdfProcessing:Resources of the release.")
-            If Not (pdfDistiller_ Is Nothing) Then
-                Marshal.ReleaseComObject(pdfDistiller_)
-                pdfDistiller_ = Nothing
+            If Not Me.disposed Then
+                If Not (pdfDistiller_ Is Nothing) Then
+                    Marshal.ReleaseComObject(pdfDistiller_)
+                    pdfDistiller_ = Nothing
+                End If
+                If Not (acroApp_ Is Nothing) Then
+                    acroApp_.CloseAllDocs()
+                    acroApp_.Exit()
+                    Marshal.ReleaseComObject(acroApp_)
+                    acroApp_ = Nothing
+                End If
             End If
-            If Not (acroApp_ Is Nothing) Then
-                acroApp_.CloseAllDocs()
-                acroApp_.Exit()
-                Marshal.ReleaseComObject(acroApp_)
-                acroApp_ = Nothing
-            End If
+            Me.disposed = True
         End Sub
 #End Region
 #Region "IDisposable Support "
         Public Sub Dispose() Implements IDisposable.Dispose
             Dispose(True)
             GC.SuppressFinalize(Me)
+        End Sub
+        Protected Overrides Sub Finalize()
+            Dispose(False)
+            MyBase.Finalize()
         End Sub
 #End Region
 

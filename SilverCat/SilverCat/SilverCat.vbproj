@@ -152,9 +152,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resource\JsonProcessingParameter.txt" />
-    <Content Include="resource\JsonSecurityParameterRecipient.txt" />
-    <Content Include="resource\JsonSecurityParameter.txt" />
+    <None Include="resource\JsonProcessingParameter.json" />
+    <None Include="resource\JsonSecurityParameterRecipient.json" />
+    <None Include="resource\JsonSecurityParameter.json" />
     <Content Include="resource\電子署名用画像.jpg" />
     <Content Include="resource\SetSecurity.js" />
     <Content Include="resource\memo.txt" />
