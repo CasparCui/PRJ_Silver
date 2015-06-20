@@ -417,7 +417,7 @@ Namespace SilverCat
                     Throw New IOException(">>It failed to open, for file(" & inPdfFilePath & ") ")
                 End If
 
-                '' JSONオブジェクトの取得。
+                '' PdDocからJavascriptオブジェクトの取得し、自前のJSObjectでラップします。
                 jsObj = New JSObject(inPdDoc.GetJSObject())
 
                 '' 前面にウォーターマークテキストを付与します。
@@ -465,20 +465,20 @@ Namespace SilverCat
 
 #End Region
 
-#Region "JSONオブジェクト"
+#Region "Javascriptオブジェクト"
         ''' <summary>
-        ''' Adobe Acrobat JSONオブジェクトのラッパークラス
+        ''' Adobe Acrobat Javascriptオブジェクトのラッパークラス
         ''' </summary>
         Class JSObject
             Implements IDisposable
-            ''' <summary>Acrobat JSONオブジェクトのインスタンス。</summary>
+            ''' <summary>Acrobat Javascriptオブジェクトのインスタンス。</summary>
             Private acroJson_ As Object
 
             ''' <summary>Acrobat Colorインスタンス。</summary>
             Private acroColor_ As Object
 
             ''' <summary>コンストラクタ。</summary>
-            ''' <param name="acroJson">Acrobat JSONオブジェクト。</param>
+            ''' <param name="acroJson">Acrobat Javascriptオブジェクト。</param>
             Public Sub New(ByRef acroJson As Object)
                 Me.acroJson_ = acroJson
                 Dim jsonType As Type = Me.acroJson_.GetType()
