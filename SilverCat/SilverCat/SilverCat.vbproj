@@ -111,6 +111,7 @@
     <None Include="resource\AcrobatProセキュティポリシーの設定方.pdf" />
     <None Include="resource\AcrobatPro電子署名作成と表示方法の設定方.docx" />
     <None Include="resource\AcrobatPro電子署名作成と表示方法の設定方.pdf" />
+    <None Include="resource\acrojs_j.pdf" />
     <None Include="resource\CertExchangeHanako.cer" />
     <None Include="resource\CertExchangeTaro.cer" />
     <None Include="resource\Hanako.pfx" />
